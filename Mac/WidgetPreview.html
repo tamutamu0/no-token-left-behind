@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<style>
+* { box-sizing: border-box; }
+html, body, #preview { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; user-select: none; }
+.widget { width: 100%; height: 100%; border-radius: 24px; }
+.text { white-space: nowrap; line-height: 1.18; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+i { display: block; }
+</style>
+</head>
+<body><main id="preview" aria-label="ウィジェットのプレビュー"></main>
+<script>
+// A local adapter for Scriptable's layout primitives. No network or file APIs.
+class Stack {
+  constructor(type = 'stack') { this.type = type; this.children = []; this.direction = 'row'; }
+  addStack() { const child = new Stack(); this.children.push(child); return child; }
+  addText(value) { const child = { type: 'text', value }; this.children.push(child); return child; }
+  addSpacer(value) { this.children.push({ type: 'spacer', value }); }
+  layoutHorizontally() { this.direction = 'row'; }
+  layoutVertically() { this.direction = 'column'; }
+  centerAlignContent() { this.center = true; }
+  bottomAlignContent() { this.bottom = true; }
+  setPadding(...values) { this.padding = values; }
+}
+class ListWidget extends Stack { constructor() { super('widget'); this.direction = 'column'; } }
+class Color { constructor(hex) { this.hex = hex; } static dynamic(light, dark) { return { light, dark }; } }
+class Size { constructor(width, height) { this.width = width; this.height = height; } }
+const previewFont = (size, weight = 400, rounded = false) => ({ size, weight, rounded });
+const Font = { systemFont: n => previewFont(n), semiboldSystemFont: n => previewFont(n, 600),
+  semiboldRoundedSystemFont: n => previewFont(n, 600, true) };
+const Script = { name: () => 'AI Usage' };
+/*WIDGET_SCRIPT*/
+
+const escapePreviewText = value => String(value).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function previewMarkup(node, appearance, parentDirection = 'column') {
+  const color = c => '#' + (c[appearance] || c).hex;
+  if (node.type === 'text') {
+    return `<span class="text" style="font-size:${node.font.size}px;font-weight:${node.font.weight};color:${color(node.textColor)};font-family:${node.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(node.value)}</span>`;
+  }
+  if (node.type === 'spacer') {
+    return `<i style="${node.value == null ? 'flex:1;min-width:0;min-height:0' : `flex:none;${parentDirection === 'row' ? 'width' : 'height'}:${node.value}px`}"></i>`;
+  }
+  const styles = [`display:flex;flex-direction:${node.direction}`, `align-items:${node.center ? 'center' : node.bottom ? 'baseline' : 'stretch'}`, 'flex-shrink:0'];
+  if (node.padding) styles.push(`padding:${node.padding.map(v => v + 'px').join(' ')}`);
+  if (node.size?.width > 0) styles.push(`width:${node.size.width}px`);
+  else if (parentDirection === 'row') styles.push('flex:1;min-width:0');
+  if (node.size?.height > 0) styles.push(`height:${node.size.height}px`);
+  if (node.backgroundColor) styles.push('background:' + color(node.backgroundColor));
+  if (node.cornerRadius) styles.push('border-radius:' + node.cornerRadius + 'px');
+  return `<div class="${node.type}" style="${styles.join(';')}">${node.children.map(child => previewMarkup(child, appearance, node.direction)).join('')}</div>`;
+}
+
+window.renderUsagePreview = (raw, family, appearance, now) => {
+  const preview = document.getElementById('preview');
+  try {
+    if (!['small', 'medium', 'large'].includes(family) || !['light', 'dark'].includes(appearance)) throw new Error('Invalid preview');
+    const snapshot = normalizeSnapshot(raw, now);
+    preview.innerHTML = previewMarkup(buildWidget(snapshot, '', family, now), appearance);
+    return { ok: true, family, appearance };
+  } catch (_) {
+    preview.textContent = 'プレビューを読み込めませんでした。';
+    return { ok: false };
+  }
+};
+</script></body></html>

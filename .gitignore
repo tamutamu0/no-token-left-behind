@@ -1,0 +1,21 @@
+.build/
+.state/
+build/
+build-mac/
+build-*.log
+dist/
+*.xcuserstate
+xcuserdata/
+*.mobileprovision
+*.p12
+*.key
+pairing*.json
+Config.local.xcconfig
+__pycache__/
+.DS_Store
+
+# Local data the Mac app writes (never commit)
+snapshot.json
+colab-*.json
+collector-*.json
+ai-usage-*.json
