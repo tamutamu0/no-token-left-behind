@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../Scriptable/AI Usage.js'), 'utf8');
 const context = vm.createContext({});
-vm.runInContext(source.split('// Scriptable entry point')[0] + '\nthis.api = { setLanguage, resolveLanguage, duration, normalizeSnapshot, emptySnapshot, demoSnapshot, remaining, age, resetLabel, loadSnapshot, buildWidget, allocationStats, widgetOptions, nextGrantAt, grantLabel, grantStatus };', context);
+vm.runInContext(source.split('// Scriptable entry point')[0] + '\nthis.api = { setLanguage, resolveLanguage, duration, normalizeSnapshot, emptySnapshot, demoSnapshot, remaining, age, resetLabel, loadSnapshot, loadSettings, buildWidget, allocationStats, widgetOptions, nextGrantAt, grantLabel, grantStatus };', context);
 const api = context.api;
 api.setLanguage('ja');
 const now = 1900000000;
@@ -75,6 +75,19 @@ function fileManager(files) {
     joinPath: (a,b) => `${a}/${b}`, libraryDirectory: () => '/local', documentsDirectory: () => '/cloud',
     downloadFileFromiCloud: async () => {} };
 }
+test('settings are downloaded from iCloud before reading; only known values are kept', async () => {
+  const cloud = new Map([['/cloud/ai-usage-settings.json', '{"colabGrantDay": 4, "style": "table", "token": "x"}']]);
+  let downloaded = false;
+  const fm = fileManager(cloud);
+  fm.downloadFileFromiCloud = async () => { downloaded = true; };
+  fm.readString = p => { if (!downloaded) throw new Error('placeholder'); return cloud.get(p); };
+  context.FileManager = { iCloud: () => fm };
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.loadSettings())), { colabGrantDay: 4, style: 'table' });
+  cloud.set('/cloud/ai-usage-settings.json', '{"style": "bubbles"}');
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.loadSettings())), {});
+  cloud.delete('/cloud/ai-usage-settings.json');
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.loadSettings())), {});
+});
 test('iCloud failure retains old observation and cloud demo cannot replace live cache', async () => {
   const current = Math.floor(Date.now()/1000);
   const live = clean(); live.isDemo = false; live.generatedAt = current - 5;
@@ -233,6 +246,10 @@ test('home (ring style, the default): rings hold both percentages, only reset ti
   assert.ok(render(clean(), 'medium', 'table').labels.includes('5時間'));
   assert.ok(render(clean(), 'medium', '', 'table').labels.includes('5時間'));
   assert.equal(render(clean(), 'medium', 'table').rings.length, 0);
+  // Without a known grant day Colab still says what its number is.
+  { const start = elements.length; labels.length = 0;
+    api.buildWidget(api.normalizeSnapshot(clean(), now), '', 'medium', now, '', null);
+    assert.ok(labels.includes('計算ユニット') && labels.includes('/ 200 CU') && !labels.includes('付与まで')); }
   assert.equal(api.widgetOptions('rings').style, 'rings');
   assert.equal(api.widgetOptions('table colab').style, 'table');
   assert.equal(api.widgetOptions('colab').style, null);

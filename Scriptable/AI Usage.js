@@ -180,11 +180,14 @@ async function loadSnapshot(useDemo) {
   }
 }
 
-function loadSettings() {
+// iCloud may keep the file as a placeholder on the iPhone, so it is downloaded before reading.
+async function loadSettings() {
   try {
     const cloud = FileManager.iCloud();
     const path = cloud.joinPath(cloud.documentsDirectory(), "ai-usage-settings.json");
-    if (!cloud.fileExists(path) || cloud.fileSize(path) > 4) return {};
+    if (!cloud.fileExists(path)) return {};
+    await cloud.downloadFileFromiCloud(path);
+    if (cloud.fileSize(path) > 4) return {};
     const raw = JSON.parse(cloud.readString(path));
     const settings = {};
     if (Number.isInteger(raw.colabGrantDay)) settings.colabGrantDay = raw.colabGrantDay;
@@ -733,6 +736,10 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
       text(one, t("grantUntil"), font, theme.secondary);
       if (g.waiting) text(two, t("grantShortWaiting"), font, theme.warning, "semibold");
       else inline(two, duration(Math.max(1, Math.ceil((g.nextAt - now) / 86400)) * 1440, true));
+    } else {
+      // No grant day known yet: say what the number is rather than leaving the space blank.
+      text(one, t("computeUnits"), font, theme.secondary);
+      if (a) text(two, `/ ${cuText(a.total, 0)} CU`, font, theme.secondary);
     }
     one.addSpacer(); two.addSpacer();
   };
@@ -804,7 +811,7 @@ const options = widgetOptions(args.widgetParameter);
 setLanguage(options.lang || Device.language());
 const result = await loadSnapshot(options.demo);
 const family = config.widgetFamily || "medium";
-const settings = options.demo ? {} : loadSettings();
+const settings = options.demo ? {} : await loadSettings();
 const grantDay = options.grantDay || settings.colabGrantDay || null;
 const style = options.style || settings.style || "rings";
 const widget = buildWidget(result.snapshot, result.status, family, Date.now() / 1000, args.widgetParameter, grantDay, style);
