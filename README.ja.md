@@ -2,29 +2,35 @@
 
 [English](README.md) · **日本語** · [简体中文](README.zh-CN.md) · [한국어](README.ko.md)
 
-# AI Usage Widget
+<img src="docs/images/ja/hero.png" alt="No Token Left Behind — Claude Code・Codex・Gemini・Colab の残量を iPhone のホーム画面とロック画面に" width="900">
 
-**Claude・Codex・Antigravity・Google Colab の残りを、iPhone のホーム画面とロック画面でひと目で。**
+# No Token Left Behind
 
-[![CI](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml)
+### レートリミット、寝かせるな。
+
+**Claude Code・OpenAI Codex・Gemini（Antigravity）・Google Colab の利用上限を、iPhone のホーム画面とロック画面に出す無料・オープンソースのウィジェット。**<br>
+5 時間枠と週の枠があと何 % 残っているか、いつ回復するかが、ひと目でわかります。
+
+[![GitHub stars](https://img.shields.io/github/stars/tamutamu0/no-token-left-behind?style=social)](https://github.com/tamutamu0/no-token-left-behind/stargazers)
+[![CI](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black?logo=apple)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
-![サーバー不要](https://img.shields.io/badge/server-none-success)
-![Languages](https://img.shields.io/badge/UI-EN%20%C2%B7%20JA%20%C2%B7%20ZH%20%C2%B7%20KO-informational)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-supported-D97757)
+![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
+![Gemini](https://img.shields.io/badge/Gemini%20(Antigravity)-supported-4285F4)
+![Colab](https://img.shields.io/badge/Google%20Colab-supported-F9AB00)
 
-<img src="docs/images/ja/light.png" alt="ホーム画面ウィジェット（小・中・大）" width="900">
+[**クイックスタート**](#クイックスタート) · [**デモで試す**](#クイックスタート) · [**仕組み**](#仕組み) · [**よくある質問**](#よくある質問)
 
 </div>
-
-Mac には、各サービスの公式 CLI がすでにログイン済みで入っています。このプロジェクトはその公式 CLI だけに 10 分ごとに残量を問い合わせ、**数値だけ**を iCloud Drive に書き出します。iPhone の [Scriptable](https://scriptable.app/) の小さなスクリプトが、そのファイルをウィジェットにします。
-
-サーバーなし。API キーなし。有料の Apple Developer 登録なし。どこかのサイトにパスワードを入れることもありません。
 
 ---
 
 ## 目次
 
+- [なぜ必要？](#なぜ必要)
+- [こんな人に](#こんな人に)
 - [特長](#特長)
 - [ウィジェットの見方](#ウィジェットの見方)
 - [ギャラリー](#ギャラリー)
@@ -39,6 +45,32 @@ Mac には、各サービスの公式 CLI がすでにログイン済みで入�
 - [困ったときは](#困ったときは)
 - [ロードマップ](#ロードマップ)
 - [貢献](#貢献) · [ライセンス](#ライセンス)
+
+## なぜ必要？
+
+Claude・Codex・Gemini には 5 時間枠と週の枠があり、どちらも時間が来ればリセットされます。**使っても、使わなくても。** 60% 残したままリセットされた枠は、作れたはずの機能 1 本分です。
+
+- 😴 **寝かせた枠は、ただの損。**「残り 72% · あと 2h」なら、あのリファクタリングは*今*始めるべき。
+- 🧱 **作業の途中で壁に激突しない。** 大きな移行を頼む*前に*「実は残り 8%」と気づける。
+- 🔀 **複数プランの使い分けに。** Claude が尽きても、ひと目で Codex がまだ 81% あるとわかる。
+- 💳 **Colab の計算ユニットも取りこぼさない。** 残高と次の付与までの日数がわかるから、補充される前に使い切れる。
+
+ターミナルもダッシュボードも Mac も開かずに、ロック画面をちらっと見るだけ。
+
+<p align="center"><img src="docs/images/ja/light.png" alt="ホーム画面ウィジェット（小・中・大）" width="900"></p>
+
+## こんな人に
+
+| 契約しているもの | ウィジェットに出るもの |
+|---|---|
+| **Claude Pro / Max**（Claude Code） | 5 時間のセッション枠と週の枠、回復までの時間 |
+| **ChatGPT Plus / Pro**（Codex CLI） | Codex の 5 時間枠と週の枠 |
+| **Antigravity**（無料、または Google AI Pro / Ultra） | Gemini モデル枠の 5 時間・週 |
+| **Colab Pro / Pro+**（または Colab 付きの Google AI プラン） | 残りの計算ユニットと、次の付与までの日数 |
+
+好きな組み合わせで使えます。つないでいないサービスは「—」になるだけです。
+
+仕組みをひとことで言うと、Mac にはすでに公式 CLI がログイン済みで入っています。Mac アプリが 10 分ごとにその公式 CLI だけに残りを聞き、**数値だけ**を iCloud Drive に置きます。iPhone の小さな [Scriptable](https://scriptable.app/) スクリプトが、それをウィジェットにします。**サーバーなし。API キーなし。ブラウザの Cookie なし。有料の Apple Developer 登録なし。**
 
 ## 特長
 
@@ -92,8 +124,8 @@ Mac には、各サービスの公式 CLI がすでにログイン済みで入�
 **1. Mac アプリをビルドして入れる**（約 2 分）
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install          # ビルド → ローカル署名 → ログイン時に自動起動
 ```
 
@@ -245,6 +277,18 @@ Colab の CLI が返すのは現在の残高だけで、付与日も失効日も
 ## よくある質問
 
 <details>
+<summary><b>iPhone で Claude Code や Codex の利用上限（残り）を確認するには？</b></summary>
+
+まさにそのためのツールです。一度設定すれば（[クイックスタート](#クイックスタート)）、ホーム画面とロック画面に 5 時間枠・週の枠の残り % と回復までの時間が出ます。
+</details>
+
+<details>
+<summary><b>無料ですか？</b></summary>
+
+無料です（MIT ライセンス）。Scriptable も無料で、有料の Apple Developer 登録も要りません。必要なのは、すでに契約している AI のプランだけです。
+</details>
+
+<details>
 <summary><b>使うと枠やトークンが減りますか？</b></summary>
 
 減りません。残量を読むだけです。Codex には接続時の `initialize` と `account/rateLimits/read` を 1 回、Claude と Antigravity は `/usage`、Colab は `usage` を実行するだけで、プロンプトの送信やモデルの呼び出しはしません。
@@ -322,6 +366,12 @@ Colab の CLI が返すのは現在の残高だけで、付与日も失効日も
 ## 謝辞
 
 Simon B. Støvring 氏の [Scriptable](https://scriptable.app/) のおかげで、App Store のアプリなしで iPhone のウィジェットを作れます。Claude と Antigravity の CLI は [CodexBar](https://codexbar.app/) が動かします。Xcode プロジェクトは [XcodeGen](https://github.com/yonaskolb/XcodeGen) で生成しています。
+
+## 応援してください
+
+5 時間枠を 1 回でもムダにせずに済んだら、⭐ をつけてもらえると、次の誰かに届きやすくなります。
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tamutamu0/no-token-left-behind&type=Date)](https://star-history.com/#tamutamu0/no-token-left-behind&Date)
 
 ## ライセンス
 

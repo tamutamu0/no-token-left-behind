@@ -2,24 +2,28 @@
 
 [English](README.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · **한국어**
 
-# AI Usage Widget
+<img src="docs/images/ko/hero.png" alt="No Token Left Behind — Claude Code, Codex, Gemini, Colab 사용 한도를 iPhone 홈 화면과 잠금 화면에" width="900">
 
-**Claude, Codex, Antigravity, Google Colab이 얼마나 남았는지 iPhone 홈 화면과 잠금 화면에서 한눈에.**
+# No Token Left Behind
 
-[![CI](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml)
+### 한도는 쓰든 안 쓰든 리셋됩니다. 재우지 마세요.
+
+**Claude Code, OpenAI Codex, Gemini(Antigravity), Google Colab의 사용 한도를 iPhone 홈 화면과 잠금 화면에 보여 주는 무료 오픈소스 위젯.**<br>
+5시간 한도와 주간 한도가 얼마나 남았는지, 언제 리셋되는지 한눈에 확인하세요.
+
+[![GitHub stars](https://img.shields.io/github/stars/tamutamu0/no-token-left-behind?style=social)](https://github.com/tamutamu0/no-token-left-behind/stargazers)
+[![CI](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black?logo=apple)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
-![서버 불필요](https://img.shields.io/badge/server-none-success)
-![Languages](https://img.shields.io/badge/UI-EN%20%C2%B7%20JA%20%C2%B7%20ZH%20%C2%B7%20KO-informational)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-supported-D97757)
+![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
+![Gemini](https://img.shields.io/badge/Gemini%20(Antigravity)-supported-4285F4)
+![Colab](https://img.shields.io/badge/Google%20Colab-supported-F9AB00)
 
-<img src="docs/images/ko/light.png" alt="홈 화면 위젯(소·중·대)" width="900">
+[**빠른 시작**](#빠른-시작) · [**데모 체험**](#빠른-시작) · [**작동 방식**](#작동-방식) · [**자주 묻는 질문**](#자주-묻는-질문)
 
 </div>
-
-Mac에는 각 서비스의 공식 명령줄 도구가 이미 로그인된 상태로 설치되어 있습니다. 이 프로젝트는 10분마다 그 공식 CLI에만 남은 한도를 물어보고, **숫자만** iCloud Drive에 기록합니다. iPhone의 작은 [Scriptable](https://scriptable.app/) 스크립트가 그 파일을 위젯으로 바꿉니다.
-
-서버도, API 키도, 유료 Apple Developer 계정도 필요 없습니다. 어떤 웹사이트에도 비밀번호를 입력하지 않습니다.
 
 > 자세한 문서는 현재 [English](docs/en/setup.md)와 [日本語](docs/ja/setup.md)로 제공됩니다.
 
@@ -27,6 +31,8 @@ Mac에는 각 서비스의 공식 명령줄 도구가 이미 로그인된 상태
 
 ## 목차
 
+- [왜 필요할까](#왜-필요할까)
+- [이런 분께](#이런-분께)
 - [주요 특징](#주요-특징)
 - [위젯 읽는 법](#위젯-읽는-법)
 - [갤러리](#갤러리)
@@ -40,6 +46,32 @@ Mac에는 각 서비스의 공식 명령줄 도구가 이미 로그인된 상태
 - [자주 묻는 질문](#자주-묻는-질문)
 - [문제 해결](#문제-해결)
 - [라이선스](#라이선스)
+
+## 왜 필요할까
+
+Claude, Codex, Gemini에는 5시간 한도와 주간 한도가 있고, 시간이 되면 리셋됩니다. **썼든 안 썼든.** 60%를 남긴 채 리셋된 한도는 만들 수 있었던 기능 하나입니다.
+
+- 😴 **잠자는 한도는 그냥 손해.** "72% · 2h 후"라면 그 리팩터링은 *지금* 시작할 때입니다.
+- 🧱 **작업 도중 벽에 부딪히지 않기.** 큰 마이그레이션을 맡기기 *전에* "사실 8% 남음"을 알 수 있습니다.
+- 🔀 **여러 요금제를 오가는 분께.** Claude가 바닥나도 Codex가 아직 81% 남은 걸 한눈에.
+- 💳 **Colab 컴퓨팅 단위도 놓치지 않기.** 잔액과 다음 지급까지 남은 날짜를 보고, 충전되기 전에 다 쓰세요.
+
+터미널도, 대시보드도, Mac도 열 필요 없이 잠금 화면을 슬쩍 보기만 하면 됩니다.
+
+<p align="center"><img src="docs/images/ko/light.png" alt="홈 화면 위젯(소·중·대)" width="900"></p>
+
+## 이런 분께
+
+| 구독 중인 서비스 | 위젯에 표시되는 내용 |
+|---|---|
+| **Claude Pro / Max** (Claude Code) | 5시간 세션 한도와 주간 한도, 리셋 카운트다운 |
+| **ChatGPT Plus / Pro** (Codex CLI) | Codex 5시간·주간 한도 |
+| **Antigravity** (무료 또는 Google AI Pro / Ultra) | Gemini 모델 한도, 5시간·주간 |
+| **Colab Pro / Pro+** (또는 Colab이 포함된 Google AI 요금제) | 남은 컴퓨팅 단위와 다음 지급까지 남은 날짜 |
+
+원하는 조합으로 쓰면 됩니다. 연결하지 않은 서비스는 "—"로만 표시됩니다.
+
+한마디로: Mac에는 이미 공식 CLI가 로그인되어 있습니다. Mac 앱이 10분마다 그 공식 CLI에만 남은 양을 묻고, **숫자만** iCloud Drive에 둡니다. iPhone의 작은 [Scriptable](https://scriptable.app/) 스크립트가 그것을 위젯으로 바꿉니다. **서버 없음. API 키 없음. 브라우저 쿠키 없음. 유료 Apple Developer 계정 불필요.**
 
 ## 주요 특징
 
@@ -93,8 +125,8 @@ Mac에는 각 서비스의 공식 명령줄 도구가 이미 로그인된 상태
 **1. Mac 앱 빌드 및 설치**(약 2분)
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install          # 빌드 → 로컬 서명 → 로그인 시 자동 실행
 ```
 
@@ -255,6 +287,12 @@ Colab CLI는 현재 잔액만 알려 주며 지급일이나 만료일은 알려 
 | 한 서비스만 "—" | 해당 CLI에 로그인하지 않음(Claude는 첫 실행 설정도 필요) |
 | 모두 주황색 | Mac이 잠자기 상태이거나 앱이 실행 중이 아님 |
 | 앱 업데이트 후 멈춤 | `make install`을 다시 실행. 처음에는 Scriptable 폴더를 다시 선택해야 할 수 있음 |
+
+## 응원해 주세요
+
+5시간 한도를 한 번이라도 허투루 버리지 않았다면, ⭐ 하나가 다음 사람에게 이 프로젝트를 알려 줍니다.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tamutamu0/no-token-left-behind&type=Date)](https://star-history.com/#tamutamu0/no-token-left-behind&Date)
 
 ## 라이선스
 

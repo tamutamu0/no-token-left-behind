@@ -2,29 +2,35 @@
 
 **English** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [한국어](README.ko.md)
 
-# AI Usage Widget
+<img src="docs/images/en/hero.png" alt="No Token Left Behind — Claude Code, Codex, Gemini and Colab usage limits on the iPhone Home Screen and Lock Screen" width="900">
 
-**See how much of Claude, Codex, Antigravity and Google Colab you have left — on your iPhone’s Home Screen and Lock Screen.**
+# No Token Left Behind
 
-[![CI](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml)
+### Your rate limits reset whether you use them or not. Don’t let them sleep.
+
+**Free, open-source iPhone widgets for Claude Code, OpenAI Codex, Gemini (Antigravity) and Google Colab usage limits.**<br>
+See what’s left in your 5-hour and weekly windows — and when they reset — right on your Home Screen and Lock Screen.
+
+[![GitHub stars](https://img.shields.io/github/stars/tamutamu0/no-token-left-behind?style=social)](https://github.com/tamutamu0/no-token-left-behind/stargazers)
+[![CI](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black?logo=apple)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
-![No server](https://img.shields.io/badge/server-none-success)
-![Languages](https://img.shields.io/badge/UI-EN%20%C2%B7%20JA%20%C2%B7%20ZH%20%C2%B7%20KO-informational)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-supported-D97757)
+![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
+![Gemini](https://img.shields.io/badge/Gemini%20(Antigravity)-supported-4285F4)
+![Colab](https://img.shields.io/badge/Google%20Colab-supported-F9AB00)
 
-<img src="docs/images/en/light.png" alt="Home Screen widgets in small, medium and large" width="900">
+[**Quick start**](#quick-start) · [**Try the demo**](#quick-start) · [**How it works**](#how-it-works) · [**FAQ**](#faq)
 
 </div>
-
-Your Mac already has the official command-line tools signed in. This project asks them — and only them — how much of each limit is left, every 10 minutes, and drops **just the numbers** into iCloud Drive. A tiny [Scriptable](https://scriptable.app/) script on your iPhone turns that file into widgets.
-
-No server. No API keys. No paid Apple Developer account. Nothing you type into a website.
 
 ---
 
 ## Contents
 
+- [Why](#why)
+- [Who it’s for](#who-its-for)
 - [Highlights](#highlights)
 - [Reading the widget](#reading-the-widget)
 - [Gallery](#gallery)
@@ -39,6 +45,32 @@ No server. No API keys. No paid Apple Developer account. Nothing you type into a
 - [Troubleshooting](#troubleshooting)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing) · [License](#license)
+
+## Why
+
+Claude, Codex and Gemini give you a 5-hour window and a weekly allowance. Both reset on a timer — **whether you used them or not**. Every window that resets at 60% left is a feature you didn’t ship.
+
+- 😴 **Idle quota is wasted quota.** “72% left · resets in 2h” means: start that refactor *now*.
+- 🧱 **Don’t hit the wall mid-flow.** Find out you’re at 8% *before* you ask for the big migration.
+- 🔀 **Juggling plans?** When Claude runs dry, one glance shows Codex still has 81%.
+- 💳 **Colab units quietly run out.** See the balance and the days until the next grant, and burn them before they’re topped up.
+
+No terminal, no dashboard, no Mac to open. Just glance at your Lock Screen.
+
+<p align="center"><img src="docs/images/en/light.png" alt="Home Screen widgets in small, medium and large" width="900"></p>
+
+## Who it’s for
+
+| If you pay for… | The widget shows |
+|---|---|
+| **Claude Pro / Max** (Claude Code) | 5-hour session and weekly limits, with reset countdowns |
+| **ChatGPT Plus / Pro** (Codex CLI) | 5-hour and weekly Codex limits |
+| **Antigravity** (free or Google AI Pro / Ultra) | Gemini model quota, 5-hour and weekly |
+| **Colab Pro / Pro+** (or a Google AI plan with Colab) | Compute units left, and days until the next grant |
+
+Use any mix: a service you don’t connect simply shows “—”.
+
+How it works, in one breath: your Mac already has the official CLIs signed in. Every 10 minutes the Mac app asks them — and only them — how much is left, and drops **just the numbers** into iCloud Drive. A tiny [Scriptable](https://scriptable.app/) script turns that file into widgets. **No server. No API keys. No browser cookies. No paid Apple Developer account.**
 
 ## Highlights
 
@@ -92,8 +124,8 @@ No server. No API keys. No paid Apple Developer account. Nothing you type into a
 **1. Build and install the Mac app** (about 2 minutes)
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install          # builds, signs locally, starts at login
 ```
 
@@ -245,6 +277,18 @@ Details and limitations: [Security](docs/en/security.md) · Reporting a vulnerab
 ## FAQ
 
 <details>
+<summary><b>How do I check my Claude Code or Codex usage limit on my iPhone?</b></summary>
+
+That’s exactly what this does. Set it up once (see [Quick start](#quick-start)), and your Home Screen and Lock Screen show the % left in the 5-hour and weekly windows, plus when each one resets.
+</details>
+
+<details>
+<summary><b>Is it free?</b></summary>
+
+Yes. It’s MIT-licensed. Scriptable is free, and you don’t need a paid Apple Developer account. You only need the AI plans you already pay for.
+</details>
+
+<details>
 <summary><b>Does this use up my quota or tokens?</b></summary>
 
 No. It only reads the remaining limits. Codex gets the `initialize` handshake and one `account/rateLimits/read`; Claude and Antigravity run their `/usage` command; Colab runs `usage`. No prompts, no model calls.
@@ -322,6 +366,12 @@ Bug reports, translations and new services are all welcome. Please read [CONTRIB
 ## Acknowledgements
 
 [Scriptable](https://scriptable.app/) by Simon B. Støvring makes iPhone widgets possible without an App Store app. [CodexBar](https://codexbar.app/) drives the Claude and Antigravity CLIs. [XcodeGen](https://github.com/yonaskolb/XcodeGen) generates the Xcode project.
+
+## Spread the word
+
+If this saved even one 5-hour window from going to waste, a ⭐ helps the next person find it.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tamutamu0/no-token-left-behind&type=Date)](https://star-history.com/#tamutamu0/no-token-left-behind&Date)
 
 ## License
 

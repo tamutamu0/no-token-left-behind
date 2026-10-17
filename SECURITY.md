@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please **don't open a public issue** for security problems. Report them privately through GitHub's [private vulnerability reporting](https://github.com/tamutamu0/ai-usage-widget/security/advisories/new) (Security tab → *Report a vulnerability*).
+Please **don't open a public issue** for security problems. Report them privately through GitHub's [private vulnerability reporting](https://github.com/tamutamu0/no-token-left-behind/security/advisories/new) (Security tab → *Report a vulnerability*).
 
 Include what you found, how to reproduce it, and the impact you expect. You'll get a reply within 7 days. Once a fix is ready, we'll agree on a disclosure date together.
 

@@ -24,8 +24,8 @@ This guide covers every step: collect usage on the Mac, write it to iCloud Drive
 ## 1. Install the Mac app
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install
 ```
 
@@ -78,7 +78,7 @@ Add this to your Claude Code settings, with the path changed to your clone:
 {
   "statusLine": {
     "type": "command",
-    "command": "/usr/bin/python3 \"/absolute/path/ai-usage-widget/Scripts/claude_statusline.py\""
+    "command": "/usr/bin/python3 \"/absolute/path/no-token-left-behind/Scripts/claude_statusline.py\""
   }
 }
 ```

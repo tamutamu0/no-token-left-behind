@@ -12,8 +12,8 @@ Thanks for helping. Bug reports, translations, new services and documentation fi
 ## Getting started
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make test          # Python + JavaScript + Swift
 make build         # the Mac app
 ```

@@ -24,8 +24,8 @@ Mac で残量を集めて iCloud Drive に書き出し、iPhone の Scriptable �
 ## 1. Mac アプリを入れる
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install
 ```
 
@@ -78,7 +78,7 @@ Claude Code の設定に次を加えます（パスは自分の環境に合わ�
 {
   "statusLine": {
     "type": "command",
-    "command": "/usr/bin/python3 \"/absolute/path/ai-usage-widget/Scripts/claude_statusline.py\""
+    "command": "/usr/bin/python3 \"/absolute/path/no-token-left-behind/Scripts/claude_statusline.py\""
   }
 }
 ```

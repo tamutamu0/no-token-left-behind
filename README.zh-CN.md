@@ -2,24 +2,28 @@
 
 [English](README.md) · [日本語](README.ja.md) · **简体中文** · [한국어](README.ko.md)
 
-# AI Usage Widget
+<img src="docs/images/zh/hero.png" alt="No Token Left Behind — 在 iPhone 主屏幕和锁屏上显示 Claude Code、Codex、Gemini 与 Colab 的用量额度" width="900">
 
-**在 iPhone 主屏幕和锁定屏幕上，一眼看到 Claude、Codex、Antigravity 和 Google Colab 还剩多少。**
+# No Token Left Behind
 
-[![CI](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml)
+### 额度不用，到点也会清零。别让它睡着。
+
+**免费开源的 iPhone 小组件，显示 Claude Code、OpenAI Codex、Gemini（Antigravity）和 Google Colab 的用量上限。**<br>
+5 小时窗口和每周额度还剩多少、什么时候重置，在主屏幕和锁屏上一眼看清。
+
+[![GitHub stars](https://img.shields.io/github/stars/tamutamu0/no-token-left-behind?style=social)](https://github.com/tamutamu0/no-token-left-behind/stargazers)
+[![CI](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/no-token-left-behind/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black?logo=apple)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
-![无需服务器](https://img.shields.io/badge/server-none-success)
-![Languages](https://img.shields.io/badge/UI-EN%20%C2%B7%20JA%20%C2%B7%20ZH%20%C2%B7%20KO-informational)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-supported-D97757)
+![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
+![Gemini](https://img.shields.io/badge/Gemini%20(Antigravity)-supported-4285F4)
+![Colab](https://img.shields.io/badge/Google%20Colab-supported-F9AB00)
 
-<img src="docs/images/zh/light.png" alt="主屏幕小组件（小、中、大）" width="900">
+[**快速开始**](#快速开始) · [**试用演示**](#快速开始) · [**工作原理**](#工作原理) · [**常见问题**](#常见问题)
 
 </div>
-
-你的 Mac 上已经登录了各服务的官方命令行工具。本项目每 10 分钟只向这些官方 CLI 询问各项额度还剩多少，并且**只把数字**写入 iCloud 云盘。iPhone 上一个小小的 [Scriptable](https://scriptable.app/) 脚本会把这个文件变成小组件。
-
-无需服务器、无需 API 密钥、无需付费 Apple 开发者账号，也不需要在任何网站上输入密码。
 
 > 详细文档目前提供 [English](docs/en/setup.md) 和 [日本語](docs/ja/setup.md) 两种语言。
 
@@ -27,6 +31,8 @@
 
 ## 目录
 
+- [为什么需要它](#为什么需要它)
+- [适合谁](#适合谁)
 - [亮点](#亮点)
 - [怎么看小组件](#怎么看小组件)
 - [效果展示](#效果展示)
@@ -40,6 +46,32 @@
 - [常见问题](#常见问题)
 - [故障排查](#故障排查)
 - [许可证](#许可证)
+
+## 为什么需要它
+
+Claude、Codex 和 Gemini 都有 5 小时窗口和每周额度，到点就会重置——**不管你用没用**。每一个剩着 60% 就被重置的窗口，都是一个本可以写完的功能。
+
+- 😴 **闲置的额度就是浪费。** 看到“72% · 还剩2h”，那次重构现在就该开始。
+- 🧱 **别在关键时刻撞墙。** 在让 AI 做大迁移*之前*，就知道只剩 8% 了。
+- 🔀 **多个订阅轮着用？** Claude 用完了，一眼就能看到 Codex 还有 81%。
+- 💳 **Colab 计算单元也别浪费。** 看到余额和距下次发放的天数，在补充之前把它用掉。
+
+不用开终端、不用开网页面板、也不用开 Mac。瞄一眼锁屏就够了。
+
+<p align="center"><img src="docs/images/zh/light.png" alt="主屏幕小组件（小、中、大）" width="900"></p>
+
+## 适合谁
+
+| 如果你订阅了… | 小组件会显示 |
+|---|---|
+| **Claude Pro / Max**（Claude Code） | 5 小时会话额度和每周额度，以及重置倒计时 |
+| **ChatGPT Plus / Pro**（Codex CLI） | Codex 的 5 小时和每周额度 |
+| **Antigravity**（免费或 Google AI Pro / Ultra） | Gemini 模型额度，5 小时和每周 |
+| **Colab Pro / Pro+**（或含 Colab 的 Google AI 套餐） | 剩余计算单元，以及距下次发放的天数 |
+
+任意组合都可以，未连接的服务只会显示“—”。
+
+一句话说明原理：你的 Mac 上已经登录了官方 CLI。Mac 应用每 10 分钟只向这些官方 CLI 询问剩余额度，并**只把数字**放进 iCloud 云盘，iPhone 上的 [Scriptable](https://scriptable.app/) 小脚本再把它变成小组件。**无需服务器、无需 API 密钥、不碰浏览器 Cookie、无需付费 Apple 开发者账号。**
 
 ## 亮点
 
@@ -93,8 +125,8 @@
 **1. 构建并安装 Mac 应用**（约 2 分钟）
 
 ```bash
-git clone https://github.com/tamutamu0/ai-usage-widget.git
-cd ai-usage-widget
+git clone https://github.com/tamutamu0/no-token-left-behind.git
+cd no-token-left-behind
 make install          # 构建 → 本地签名 → 登录时自动启动
 ```
 
@@ -255,6 +287,12 @@ Colab CLI 只返回当前余额，不提供发放日期或过期时间，而且 
 | 某项服务显示“—” | 该 CLI 未登录（Claude 还需完成首次设置） |
 | 全部为橙色 | Mac 处于睡眠或应用未运行 |
 | 更新应用后停止 | 重新运行 `make install`；首次可能需要重新选择 Scriptable 文件夹 |
+
+## 支持一下
+
+如果它帮你保住了哪怕一个 5 小时窗口，点个 ⭐ 能让更多人发现它。
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tamutamu0/no-token-left-behind&type=Date)](https://star-history.com/#tamutamu0/no-token-left-behind&Date)
 
 ## 许可证
 

@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- New name: **No Token Left Behind** (formerly AI Usage Widget). Hero banner and social preview image for every language.
 - English is now the default. The widget is available in English, Japanese, Simplified Chinese and Korean, following the iPhone's language or `lang=` in the Parameter. The Mac and iOS apps are available in English and Japanese through String Catalogs.
 - `make doctor` (`Scripts/doctor.py`): read-only diagnostics with fix suggestions and `--json` output.
 - A `Makefile` for build, install, widget deployment, tests and screenshots.
