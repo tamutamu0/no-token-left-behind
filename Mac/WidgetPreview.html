@@ -69,9 +69,10 @@ function previewMarkup(node, appearance, parentDirection = 'column') {
     return `<span class="text" style="font-size:${node.font.size}px;font-weight:${node.font.weight};color:${color(node.textColor)};font-family:${node.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(node.value)}</span>`;
   }
   if (node.type === 'spacer') {
-    return `<i style="${node.value == null ? 'flex:1;min-width:0;min-height:0' : `flex:none;${parentDirection === 'row' ? 'width' : 'height'}:${node.value}px`}"></i>`;
+    // A flexible spacer keeps SwiftUI's default minimum length (about 8 pt) on a device.
+    return `<i style="${node.value == null ? `flex:1;${parentDirection === 'row' ? 'min-width:8px;min-height:0' : 'min-height:8px;min-width:0'}` : `flex:none;${parentDirection === 'row' ? 'width' : 'height'}:${node.value}px`}"></i>`;
   }
-  const styles = [`display:flex;flex-direction:${node.direction}`, `align-items:${node.center ? 'center' : node.bottom ? 'baseline' : 'stretch'}`, 'flex-shrink:0'];
+  const styles = [`display:flex;flex-direction:${node.direction}`, `align-items:${node.center ? 'center' : node.bottom ? 'baseline' : 'stretch'}`, 'flex-shrink:0', ...(node.size?.width > 0 || node.size?.height > 0 ? ['overflow:hidden'] : [])];
   if (node.padding) styles.push(`padding:${node.padding.map(v => v + 'px').join(' ')}`);
   // Like Scriptable on a device: a stack without a fixed width fills its parent — across a row,
   // and the full width of a column — and its own content starts at the leading edge. A stack

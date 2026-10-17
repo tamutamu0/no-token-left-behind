@@ -674,11 +674,13 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   })();
   const hint = [snapshot.isDemo ? "DEMO" : status === "syncFailed" || status === "cachedNewer" ? t("syncPending") : "", ageText]
     .filter(Boolean).join(" · ");
-  // Medium keeps a wider leading inset: on devices the 5h/week labels sat right on the edge.
-  const pad = small ? [10, 10, 10, 10] : large ? [14, 14, 14, 14] : [11, 14, 11, 10];
+  // Budgets fit the smallest widgets (small 155×155, medium 329×155, large 329×345). On a device a
+  // flexible spacer is never shorter than about 8 pt, so every one of them is counted.
+  const pad = small ? [10, 10, 10, 10] : large ? [14, 14, 14, 14] : [11, 12, 11, 12];
   w.setPadding(pad[0], pad[1], pad[2], pad[3]);
-  const size = small ? (hint ? 46 : 50) : large ? 82 : (hint ? 58 : 64);
-  const lineH = 15, font = 11;
+  const size = small ? (hint ? 44 : 48) : large ? 80 : 58;
+  const lineH = large ? 15 : 14, font = large ? 11 : 10;
+  const cellW = small ? 60 : large ? 146 : 64;
 
   // Names stay neutral; staleness is reported once, in the corner.
   const name = (parent, id, fontSize) => {
@@ -704,11 +706,13 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   };
   const ring = (parent, id, r) => {
     // A fixed-size stack sits at the leading edge of a column on a device, so it is centred
-    // inside a full-width row instead.
-    const holder = row(parent); holder.addSpacer();
+    // with fixed side margins (flexible spacers would add their 8 pt minimum and overflow).
+    const holder = row(parent); holder.size = new Size(cellW, size);
+    const margin = Math.max(0, Math.floor((cellW - size) / 2));
+    if (margin) holder.addSpacer(margin);
     const colors = RING_COLORS[id], s = box(holder, size, size);
-    holder.addSpacer();
-    const main = Math.round(size * 0.24), sub = Math.max(9, Math.round(size * 0.16));
+    if (margin) holder.addSpacer(margin);
+    const main = Math.round(size * (small ? 0.22 : 0.24)), sub = small ? 8 : Math.max(9, Math.round(size * 0.16));
     let rings, top = null, bottom = null, unit = "%";
     if (id === "colab") {
       const a = allocationStats(r), g = grantStatus(r, grantDay, now);
@@ -760,57 +764,62 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
     one.addSpacer(); two.addSpacer();
   };
 
+  const header = (fontSize, legend) => {
+    const h = row(w);
+    if (legend) text(h, t("ringLegend"), fontSize, theme.secondary);
+    h.addSpacer();
+    if (hint) text(h, hint, fontSize, theme.warning, "semibold");
+  };
+
   if (small) {
-    if (hint) { const h = row(w); h.addSpacer(); text(h, hint, 8, theme.warning, "semibold"); w.addSpacer(2); }
-    for (const pair of [ids.slice(0, 2), ids.slice(2)]) {
-      w.addSpacer();
+    // 2 rows × (name 12 + 2 + ring) + 4, plus a 12 pt header when there is a hint.
+    if (hint) { header(8, false); w.addSpacer(2); } else w.addSpacer(4);
+    for (const [index, pair] of [ids.slice(0, 2), ids.slice(2)].entries()) {
+      if (index) w.addSpacer(4);
       const line = row(w);
       pair.forEach((id, i) => {
         if (i) line.addSpacer();
-        const r = record(id), cell = box(line, 64, size + 15);
-        name(cell, id, 10); cell.addSpacer(2); ring(cell, id, r);
+        const cell = box(line, cellW, 14 + size);
+        name(cell, id, 10); ring(cell, id, record(id));
       });
     }
-    w.addSpacer();
     return w;
   }
 
   if (large) {
-    const head = row(w);
-    text(head, t("ringLegend"), 10, theme.secondary); head.addSpacer();
-    if (hint) text(head, hint, 10, theme.warning, "semibold");
+    header(10, true);
     w.addSpacer(6);
-    for (const pair of [ids.slice(0, 2), ids.slice(2)]) {
-      w.addSpacer();
+    for (const [index, pair] of [ids.slice(0, 2), ids.slice(2)].entries()) {
+      w.addSpacer(index ? 10 : 4);
       const line = row(w);
       pair.forEach((id, i) => {
         if (i) line.addSpacer();
-        const r = record(id), cell = box(line, 146, 15 + 4 + size + 6 + lineH * 2);
+        const r = record(id), cell = box(line, cellW, 15 + 4 + size + 6 + lineH * 2);
         name(cell, id, 12); cell.addSpacer(4); ring(cell, id, r); cell.addSpacer(6);
-        if (id === "colab") colabLines(cell, 146, r);
-        else { resetLine(cell, 146, r.fiveHour, t("fiveShort")); resetLine(cell, 146, r.weekly, t("weekShort")); }
+        if (id === "colab") colabLines(cell, cellW, r);
+        else { resetLine(cell, cellW, r.fiveHour, t("fiveShort")); resetLine(cell, cellW, r.weekly, t("weekShort")); }
       });
     }
     w.addSpacer();
     return w;
   }
 
-  // Medium: the window labels appear once, at the left edge of the two reset lines.
-  if (hint) { const h = row(w); h.addSpacer(); text(h, hint, 8, theme.warning, "semibold"); w.addSpacer(2); }
-  const colW = 70, colH = 14 + 5 + size + 7 + lineH * 2;
-  w.addSpacer();
+  // Medium: label column 16 + 4 × (8 pt spacer + 64) = 304 of the 305 pt inside the smallest widget.
+  const colH = 14 + 4 + size + 6 + lineH * 2;
+  // Centred vertically: 8 + 110 + 8 without a hint; with one, the header takes the top spacer's place.
+  if (hint) { header(8, false); w.addSpacer(2); } else w.addSpacer();
   const main = row(w);
-  const side = box(main, 20, colH); side.addSpacer();
+  const side = box(main, 16, colH); side.addSpacer();
   const hasFiveHour = ["claude", "codex", "antigravity"].some(id => record(id).fiveHour != null);
   for (const label of [hasFiveHour ? t("fiveShort") : "", t("weekShort")]) {
-    const l = row(side); l.size = new Size(20, lineH); text(l, label, font, theme.secondary, "semibold", 0.5); l.addSpacer();
+    const l = row(side); l.size = new Size(16, lineH); text(l, label, font, theme.secondary, "semibold", 0.5);
   }
   ids.forEach(id => {
     main.addSpacer();
-    const r = record(id), col = box(main, colW, colH);
-    name(col, id, 11); col.addSpacer(5); ring(col, id, r); col.addSpacer(7);
-    if (id === "colab") colabLines(col, colW, r);
-    else { resetLine(col, colW, r.fiveHour); resetLine(col, colW, r.weekly); }
+    const r = record(id), col = box(main, cellW, colH);
+    name(col, id, 11); col.addSpacer(4); ring(col, id, r); col.addSpacer(6);
+    if (id === "colab") colabLines(col, cellW, r);
+    else { resetLine(col, cellW, r.fiveHour); resetLine(col, cellW, r.weekly); }
   });
   w.addSpacer();
   return w;
