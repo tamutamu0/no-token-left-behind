@@ -80,6 +80,7 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 | ⏱️ **When it comes back** | Every limit shows what is left *and* when it resets — “72% · in 2h”. |
 | 💳 **Colab as a balance** | Compute units are a stock, not a window: shown apart, with the units left and a countdown to the next monthly grant that **learns the real grant day** from your history. |
 | 🔒 **Lock Screen too** | Activity-style rings, a compact bar chart, or one line above the clock. The ring follows whichever service is closest to running out. |
+| 🎨 **Two styles** | Rings (the default) or a compact table — pick per widget with `rings` / `table`, or set one for all. |
 | 🌐 **Speaks your language** | Widget in English, 日本語, 简体中文 and 한국어 (follows the iPhone). Mac and iPhone apps in English and Japanese. |
 | 🧪 **Honest numbers** | Values older than 15 minutes turn orange. A limit past its reset time says “Awaiting refresh” instead of pretending to be 100%. |
 | 🩺 **Self-diagnosing** | `make doctor` checks every CLI, sign-in, the Mac app and the iCloud export, and tells you the exact fix. |
@@ -89,11 +90,12 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 
 <p align="center"><img src="docs/images/en/anatomy.png" alt="What each part of the widget means" width="820"></p>
 
-- **Rows** are services; **columns** are the 5-hour and weekly windows.
-- The **big number** is what is left; the **bar** shows the same at a glance; the small text is the **time until it resets**.
-- A service without a 5-hour window (some plans) simply leaves that cell **blank** — no dash, no empty bar.
-- Below the line is **Colab**: units left, the total if you confirmed it, and the **days until the next grant**.
-- **Orange** means “low (≤ 20%)” or “this value is more than 15 minutes old”.
+- One **column** per service. The **outer ring** is the 5-hour window, the **inner ring** (a lighter tone) is the week.
+- Inside the ring: the **big number** is the 5-hour % left, the **small one** the weekly % left.
+- Below the ring: **when each one resets**. The `5h` / `wk` labels at the left edge name the two lines once for every column.
+- A plan without a 5-hour window gets a **single ring** and one number — no dash, no empty ring.
+- **Colab** is a balance, not a window: compute units left in the ring, and the days until the next grant below.
+- A value more than 15 minutes old swaps the service name for its age (“18m ago”) in **orange**.
 
 ## Gallery
 
@@ -106,13 +108,19 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 <td align="center"><b>Dark mode</b> — follows the system appearance.</td>
 <td align="center"><b>Lock Screen</b> — inline, rectangular, and rings (outer 5-hour, inner weekly).</td>
 </tr>
+<tr>
+<td colspan="2"><img src="docs/images/en/table.png" alt="Table style"></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><b>Table style</b> — prefer numbers and bars? Put <code>table</code> in the widget’s Parameter.</td>
+</tr>
 </table>
 
 | Widget | What it shows |
 |---|---|
-| **Small** | Each service with its 5-hour and weekly % and bars; Colab units and days to the next grant. |
-| **Medium** | Adds “in 2h” reset times next to every number. |
-| **Large** | Full reset times (“in 4h 59m”), Colab usage and the grant countdown. |
+| **Small** | Four rings with the 5-hour and weekly % inside; Colab units and days to the next grant. |
+| **Medium** | Adds the reset times (“in 2h”, “in 3d”) under every ring. |
+| **Large** | Bigger rings with full reset times (“in 2h 0m”), Colab usage and the grant countdown. |
 | **Lock · inline** | The window closest to running out, e.g. “Codex 5h 25% · in 1h”. |
 | **Lock · rectangular** | Every service’s 5h/weekly % with thin bars, Colab at the bottom. |
 | **Lock · circular** | Two rings for one service — automatically the one with the least left, or pin one with a parameter. |
@@ -221,6 +229,7 @@ Long-press the widget → **Edit Widget** → **Parameter**. Space-separated, al
 |---|---|
 | *(empty)* | Live data |
 | `demo` | Sample data — try the widget without a Mac |
+| `rings` · `table` | Home Screen style for this widget (default: rings) |
 | `claude` · `codex` · `antigravity` · `colab` | Pin the Lock Screen ring / inline widget to one service (default: whichever has the least left) |
 | `grant=4` | Treat the 4th of each month as Colab’s grant day for this widget |
 | `lang=en` · `ja` · `zh` · `ko` | Force a language (default: the iPhone’s language, English otherwise) |
@@ -232,8 +241,10 @@ Examples: `colab` · `demo claude` · `colab grant=15 lang=en`
 `iCloud Drive › Scriptable › ai-usage-settings.json` applies to every widget:
 
 ```json
-{ "colabGrantDay": 4 }
+{ "colabGrantDay": 4, "style": "rings" }
 ```
+
+`style` is `"rings"` (default) or `"table"`; a `rings` / `table` token in a widget’s Parameter wins over it.
 
 ### Finding the CLIs
 

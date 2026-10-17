@@ -91,6 +91,15 @@ Both the Mac (Python and Swift) and Scriptable check types, ranges and combinati
 
 The widget asks to redraw after 10 minutes, but iOS decides when it actually does.
 
+## Home Screen styles
+
+| Style | Layout |
+|---|---|
+| Rings (default) | One column per service: outer ring = 5-hour, inner ring = weekly (a lighter tone of the brand color), both remaining percentages inside, reset times below. A stale column shows its age in place of the name |
+| Table | Services as rows, 5-hour and weekly columns with numbers and bars, Colab under a divider |
+
+The style comes from a `rings` / `table` token in the Parameter, then `style` in `ai-usage-settings.json`, then the default (rings). The rings are drawn as an image with a neutral gray track; the numbers are ordinary text laid over it, so they follow light and dark mode.
+
 ## Lock Screen widgets
 
 | Family | Content |

@@ -55,12 +55,15 @@ const escapePreviewText = value => String(value).replace(/[&<>"']/g,
 function previewMarkup(node, appearance, parentDirection = 'column') {
   const color = c => { const v = c[appearance] || c; if (v.alpha != null && v.alpha < 1) {
     const n = parseInt(v.hex, 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${v.alpha})`; } return '#' + v.hex; };
-  if (node.type === 'image') {
-    const { size, ops } = node.img, w = node.imageSize?.width || size.width, h = node.imageSize?.height || size.height;
-    const body = ops.map(op => op.kind === 'path'
+  const drawing = (img, w, h, style) => {
+    const body = img.ops.map(op => op.kind === 'path'
       ? `<polyline fill="none" stroke-linecap="round" stroke="${color(op.color)}" stroke-width="${op.width}" points="${op.points.map(p => p.x.toFixed(2) + ',' + p.y.toFixed(2)).join(' ')}"/>`
       : `<text x="${op.align === 'center' ? op.rect.x + op.rect.width / 2 : op.rect.x}" y="${op.rect.y + op.rect.height * 0.8}" text-anchor="${op.align === 'center' ? 'middle' : 'start'}" font-size="${op.font.size}" font-weight="${op.font.weight}" fill="${color(op.color)}" font-family="${op.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(op.text)}</text>`).join('');
-    return `<svg width="${w}" height="${h}" viewBox="0 0 ${size.width} ${size.height}" style="flex-shrink:0;display:block">${body}</svg>`;
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${img.size.width} ${img.size.height}" style="${style}">${body}</svg>`;
+  };
+  if (node.type === 'image') {
+    const { size } = node.img;
+    return drawing(node.img, node.imageSize?.width || size.width, node.imageSize?.height || size.height, 'flex-shrink:0;display:block');
   }
   if (node.type === 'text') {
     return `<span class="text" style="font-size:${node.font.size}px;font-weight:${node.font.weight};color:${color(node.textColor)};font-family:${node.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(node.value)}</span>`;
@@ -75,17 +78,20 @@ function previewMarkup(node, appearance, parentDirection = 'column') {
   if (node.size?.height > 0) styles.push(`height:${node.size.height}px`);
   if (node.backgroundColor) styles.push('background:' + color(node.backgroundColor));
   if (node.cornerRadius) styles.push('border-radius:' + node.cornerRadius + 'px');
-  return `<div class="${node.type}" style="${styles.join(';')}">${node.children.map(child => previewMarkup(child, appearance, node.direction)).join('')}</div>`;
+  // A stack's backgroundImage is stretched behind its content, like Scriptable does.
+  const backdrop = node.backgroundImage ? drawing(node.backgroundImage, '100%', '100%', 'position:absolute;left:0;top:0;z-index:-1;pointer-events:none') : '';
+  if (backdrop) styles.push('position:relative;isolation:isolate');
+  return `<div class="${node.type}" style="${styles.join(';')}">${backdrop}${node.children.map(child => previewMarkup(child, appearance, node.direction)).join('')}</div>`;
 }
 
-window.renderUsagePreview = (raw, family, appearance, now, language = 'en') => {
+window.renderUsagePreview = (raw, family, appearance, now, language = 'en', style = 'rings') => {
   const preview = document.getElementById('preview');
   try {
-    if (!['small', 'medium', 'large'].includes(family) || !['light', 'dark'].includes(appearance)) throw new Error('Invalid preview');
+    if (!['small', 'medium', 'large'].includes(family) || !['light', 'dark'].includes(appearance) || !STYLES.includes(style)) throw new Error('Invalid preview');
     setLanguage(language);
     const snapshot = normalizeSnapshot(raw, now);
-    preview.innerHTML = previewMarkup(buildWidget(snapshot, '', family, now), appearance);
-    return { ok: true, family, appearance };
+    preview.innerHTML = previewMarkup(buildWidget(snapshot, '', family, now, '', null, style), appearance);
+    return { ok: true, family, appearance, style };
   } catch (_) {
     preview.textContent = 'Couldn’t load the preview.';
     return { ok: false };

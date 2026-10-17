@@ -160,6 +160,14 @@ With an empty Parameter, the circular and inline widgets show whichever service 
 
 On macOS 14 and later you can put iPhone widgets on the Mac desktop. Right-click the desktop → **Edit Widgets** → **Scriptable (From iPhone)**. **Use iPhone widgets** must be on in System Settings › Desktop & Dock.
 
+### Widget style
+
+Home Screen widgets come in two styles: **rings** (the default) and a compact **table** with numbers and bars. Add `table` (or `rings`) to a widget’s Parameter to choose for that widget, or set a default for all of them in `ai-usage-settings.json`:
+
+```json
+{ "style": "table" }
+```
+
 ### Widget language
 
 The widget follows the iPhone's language (English, Japanese, Simplified Chinese or Korean) and falls back to English otherwise. To choose for one widget, add `lang=ja` (or `en`, `zh`, `ko`) to its Parameter.

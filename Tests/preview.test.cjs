@@ -15,14 +15,17 @@ test('offline preview runs the shipped widget for every size and appearance with
   const now = 1900000000;
   for (const family of ['small', 'medium', 'large']) {
     for (const appearance of ['light', 'dark']) {
-      for (const [snapshot, language] of [[context.demo(now), 'en'], [context.empty(now), 'en'], [context.demo(now), 'ja']]) {
-        const result = context.window.renderUsagePreview(snapshot, family, appearance, now, language);
+      for (const [snapshot, language, style] of [[context.demo(now), 'en', 'rings'], [context.empty(now), 'en', 'rings'],
+        [context.demo(now), 'ja', 'rings'], [context.demo(now), 'en', 'table'], [context.empty(now), 'en', 'table'], [context.demo(now), 'ja', 'table']]) {
+        const result = context.window.renderUsagePreview(snapshot, family, appearance, now, language, style);
         assert.equal(result.ok, true);
-        assert.match(element.innerHTML, /Antigravity/);
+        assert.match(element.innerHTML, family === 'small' && style === 'rings' ? /AG/ : /Antigravity/);
         assert.match(element.innerHTML, /Colab/);
         assert.match(element.innerHTML, /CU/);
-        const words = language === 'ja' ? { small: /週間/, other: /残り/ } : { small: /Weekly/, other: /Left/ };
-        assert.match(element.innerHTML, family === 'small' ? words.small : words.other);
+        if (style === 'table') {
+          const words = language === 'ja' ? { small: /週間/, other: /残り/ } : { small: /Weekly/, other: /Left/ };
+          assert.match(element.innerHTML, family === 'small' ? words.small : words.other);
+        } else assert.match(element.innerHTML, /<svg[^>]*position:absolute/);
         assert.doesNotMatch(element.innerHTML, /AI credits|scriptable:\/\/|fixture-secret/);
         assert.match(element.innerHTML, appearance === 'dark' ? /background:#1c1c1e/ : /background:#ffffff/);
       }
@@ -31,5 +34,6 @@ test('offline preview runs the shipped widget for every size and appearance with
   assert.equal(context.FileManager, undefined);
   assert.equal(context.fetch, undefined);
   assert.equal(context.window.renderUsagePreview({}, 'medium', 'light', now).ok, false);
+  assert.equal(context.window.renderUsagePreview(context.demo(now), 'medium', 'light', now, 'en', 'bubbles').ok, false);
   assert.equal(element.textContent, 'Couldn’t load the preview.');
 });

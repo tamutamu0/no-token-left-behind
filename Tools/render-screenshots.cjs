@@ -3,7 +3,7 @@
 //
 //   node Tools/render-screenshots.cjs [repo-root] [out-dir]
 //
-// For every language (en, ja, zh, ko) it writes <out-dir>/<lang>/{hero,light,dark,lock,anatomy}.png,
+// For every language (en, ja, zh, ko) it writes <out-dir>/<lang>/{hero,light,dark,table,lock,anatomy}.png,
 // plus <out-dir>/social-preview.png (the English hero at 1280×640, under GitHub's 1 MB limit).
 // It uses the shipped widget code with the same Scriptable shim as the Mac preview, and
 // headless Google Chrome for the pixels (set CHROME=/path/to/chrome to override).
@@ -16,7 +16,7 @@ const root = path.resolve(process.argv[2] || '.');
 const outDir = path.resolve(process.argv[3] || path.join(root, 'docs/images'));
 const chrome = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const languages = ['en', 'ja', 'zh', 'ko'];
-const shots = { hero: [1280, 640], light: [1000, 455], dark: [1000, 455], lock: [600, 320], anatomy: [1000, 520] };
+const shots = { hero: [1280, 640], light: [1000, 455], dark: [1000, 455], table: [1000, 455], lock: [600, 320], anatomy: [1000, 520] };
 
 const tpl = fs.readFileSync(path.join(root, 'Mac/WidgetPreview.html'), 'utf8');
 const shim = tpl.slice(tpl.indexOf('class Stack'), tpl.indexOf('/*WIDGET_SCRIPT*/'));
@@ -25,13 +25,13 @@ const widget = fs.readFileSync(path.join(root, 'Scriptable/AI Usage.js'), 'utf8'
 
 // Callout text for the anatomy picture, per language.
 const CALLOUTS = {
-  en: { service: 'Service', five: 'Left in the 5-hour window', resets: 'Time until it resets', week: 'Left this week',
+  en: { service: 'Service', five: '5-hour left (outer ring)', resets: 'Time until each resets', week: 'Weekly left (inner ring)',
         colab: 'Colab compute units left', grant: 'Countdown to the next grant' },
-  ja: { service: 'サービス', five: '5時間枠の残り', resets: '回復までの時間', week: '今週の残り',
+  ja: { service: 'サービス', five: '5時間の残り（外側）', resets: 'それぞれの回復までの時間', week: '週の残り（内側）',
         colab: 'Colabの残り計算ユニット', grant: '次の付与までの日数' },
-  zh: { service: '服务', five: '5小时额度剩余', resets: '距离重置', week: '本周剩余',
+  zh: { service: '服务', five: '5小时剩余（外圈）', resets: '各自距离重置', week: '每周剩余（内圈）',
         colab: 'Colab 剩余计算单元', grant: '距下次发放' },
-  ko: { service: '서비스', five: '5시간 한도 남음', resets: '재설정까지 남은 시간', week: '이번 주 남음',
+  ko: { service: '서비스', five: '5시간 남음(바깥)', resets: '각각 리셋까지 남은 시간', week: '주간 남음(안쪽)',
         colab: 'Colab 남은 컴퓨팅 단위', grant: '다음 지급까지' }
 };
 
@@ -50,7 +50,7 @@ const HERO = {
 const page = `<!doctype html><meta charset="utf-8"><style>
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
 .scene{display:flex;gap:28px;align-items:flex-start;padding:36px;min-width:100vw;min-height:100vh;position:relative}
-.light{background:linear-gradient(140deg,#e9eef7,#f6e9ee)}.dark{background:linear-gradient(140deg,#0e1424,#2a1630)}
+.light,.table{background:linear-gradient(140deg,#e9eef7,#f6e9ee)}.dark{background:linear-gradient(140deg,#0e1424,#2a1630)}
 .lock{background:linear-gradient(140deg,#25356b,#7a4a8f);flex-direction:column;align-items:center;gap:18px;padding:40px 60px;color:#fff}
 .hero{background:radial-gradient(1200px 700px at 85% 20%,#3b2a7a 0%,transparent 60%),linear-gradient(135deg,#0b1020,#1a1238 60%,#2b0f2e);color:#fff;display:grid;grid-template-columns:560px 1fr;gap:40px;align-items:center;padding:56px 64px}
 .hero h1{font-size:64px;line-height:1.02;margin:0 0 22px;letter-spacing:-1.5px;font-weight:800}
@@ -73,7 +73,8 @@ const now = new Date(2026, 9, 17, 10, 30).getTime() / 1000;
 const snap = normalizeSnapshot(demoSnapshot(now), now);
 const scene = document.createElement('div'); scene.className = 'scene ' + mode; document.body.appendChild(scene);
 const box = (w, h, inner) => '<div class=w style="width:' + w + 'px;height:' + h + 'px">' + inner + '</div>';
-const home = (f, ap) => previewMarkup(buildWidget(snap, '', f, now, '', 4), ap);
+const style = Q.get('s') || (mode === 'table' ? 'table' : 'rings');
+const home = (f, ap) => previewMarkup(buildWidget(snap, '', f, now, '', 4, style), ap);
 const acc = (f, p, w, h, r) => { const wd = buildWidget(snap, '', f, now, p, 4);
   return '<div class=acc style="width:' + w + 'px;height:' + h + 'px;border-radius:' + r + ';' + (wd.addAccessoryWidgetBackground ? 'background:rgba(255,255,255,.18)' : '') + '">' + previewMarkup(wd, 'dark') + '</div>'; };
 if (mode === 'hero') {
@@ -101,16 +102,15 @@ if (mode === 'hero') {
     const ex = side === 'left' ? tx + tag.offsetWidth : tx, ey = ty + tag.offsetHeight / 2;
     svg.insertAdjacentHTML('beforeend', '<path d="M' + ex + ' ' + ey + ' L' + x + ' ' + y + '" stroke="#8a96b3" stroke-width="1.5" fill="none"/><circle cx="' + x + '" cy="' + y + '" r="3.5" fill="#1f2a44"/>');
   };
-  const resetText = shortResetLabel(snap.records.find(r => r.service === 'claude').fiveHour, now);
-  const resets = spans.filter(s => s.textContent === resetText);
-  callout(find(t => t === 'Claude'), c.service, 'left', -70);
-  callout(find(t => t === '72'), c.five, 'left', -120);
-  callout(resets[0], c.resets, 'right', -110);
-  callout(find(t => t === '38'), c.week, 'right', -60);
-  callout(find(t => t === '142.5'), c.colab, 'left', 90);
-  callout(find(t => /18/.test(t) && t.length > 2), c.grant, 'right', 90);
+  callout(find(t => t === 'Claude'), c.service, 'left', -100);
+  callout(find(t => t === '72'), c.five, 'left', -30);
+  callout(find(t => t === '38'), c.week, 'left', 95);
+  callout(find(t => t === '143'), c.colab, 'right', -110);
+  callout(find(t => /18/.test(t) && t.length > 2), c.grant, 'right', 40);
+  callout(find(t => t === '4h'), c.resets, 'right', 120);
 } else {
   const ap = mode === 'dark' ? 'dark' : 'light';
+  scene.classList.toggle('light', mode === 'table');
   scene.innerHTML = [['small', 170, 170], ['medium', 364, 170], ['large', 364, 382]].map(([f, w, h]) => box(w, h, home(f, ap))).join('');
 }
 <\/script>`;

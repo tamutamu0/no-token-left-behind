@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Ring style for Home Screen widgets, now the default: outer ring 5-hour, inner ring weekly, both percentages inside and reset times below, in colors that evoke each tool. The table style stays available with `table` in the Parameter or `"style": "table"` in `ai-usage-settings.json`. The Mac app preview can switch between them.
 - New name: **No Token Left Behind** (formerly AI Usage Widget). Hero banner and social preview image for every language.
 - English is now the default. The widget is available in English, Japanese, Simplified Chinese and Korean, following the iPhone's language or `lang=` in the Parameter. The Mac and iOS apps are available in English and Japanese through String Catalogs.
 - `make doctor` (`Scripts/doctor.py`): read-only diagnostics with fix suggestions and `--json` output.

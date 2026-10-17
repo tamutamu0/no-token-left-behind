@@ -109,7 +109,7 @@ function fakeScriptable() {
   context.DrawContext = class {
     constructor() { this.ops = []; }
     setLineWidth() {} setStrokeColor(c) { this.stroke = c; } addPath(p) { this.path = p; }
-    strokePath() { this.ops.push({ kind: 'arc', points: this.path.points.length, alpha: this.stroke.alpha }); }
+    strokePath() { this.ops.push({ kind: 'arc', points: this.path.points.length, alpha: this.stroke.alpha, hex: this.stroke.hex }); }
     setTextAlignedCenter() {} setFont() {} setTextColor(c) { this.fill = c; }
     drawTextInRect(text) { this.ops.push({ kind: 'text', text, hex: this.fill.hex }); }
     getImage() { return { ops: this.ops }; }
@@ -123,12 +123,12 @@ function fakeScriptable() {
   context.Script = { name: () => 'AI Usage' };
   return { labels, elements };
 }
-test('home: quota rows, Colab as a balance under a divider, absent windows paint nothing', () => {
+test('home (table style): quota rows, Colab as a balance under a divider, absent windows paint nothing', () => {
   const { labels, elements } = fakeScriptable();
   const geometry = { small: { cell: 59, bar: 2 }, medium: { cell: 98, gap: 12, bar: 3 }, large: { cell: 92, gap: 12, bar: 4 } };
   const render = (snapshot, size, status = '') => {
     const start = elements.length; labels.length = 0;
-    const w = api.buildWidget(api.normalizeSnapshot(snapshot, now), status, size, now);
+    const w = api.buildWidget(api.normalizeSnapshot(snapshot, now), status, size, now, 'table');
     const bars = elements.slice(start).filter(e => e.size?.height === geometry[size].bar && e.backgroundColor);
     return { w, labels: [...labels], elements: elements.slice(start),
       tracks: bars.filter(e => e.backgroundColor.light.hex === 'e9e9ed'),
@@ -188,6 +188,56 @@ test('home: quota rows, Colab as a balance under a divider, absent windows paint
   assert.equal(g.tracks.length, 6);
   for (const element of elements)
     for (const key of ['textColor','backgroundColor'])
+      if (element[key]) assert.equal(element[key].dynamic, true);
+});
+test('home (ring style, the default): rings hold both percentages, only reset times below', () => {
+  const { labels, elements } = fakeScriptable();
+  const grantDay = new Date((now + 18 * 86400) * 1000).getDate();
+  const render = (snapshot, size, parameter = '', style = null) => {
+    const start = elements.length; labels.length = 0;
+    const w = api.buildWidget(api.normalizeSnapshot(snapshot, now), '', size, now, parameter, grantDay, style);
+    const rings = elements.slice(start).filter(e => e.backgroundImage).map(e => e.backgroundImage.ops);
+    return { w, labels: [...labels], rings };
+  };
+  const ringOf = (r, hex) => r.rings.find(ops => ops.some(op => op.hex === hex));
+  for (const size of ['small', 'medium', 'large']) {
+    const r = render(clean(), size);
+    assert.equal(r.rings.length, 4, size);
+    assert.equal(r.w.backgroundColor.dark.hex, '1c1c1e');
+    for (const v of ['72', '38', '25', '81', '90', '64', '143']) assert.ok(r.labels.includes(v), size + ' ' + v);
+    // Outer ring in the brand color, inner ring in its lighter tone, gray tracks behind both.
+    const claude = ringOf(r, 'D97757');
+    assert.ok(claude.some(op => op.hex === 'EDB49C'));
+    assert.equal(claude.filter(op => op.hex === '8e8e93').length, 2);
+    assert.ok(r.labels.includes('DEMO'));
+    assert.ok(!r.labels.some(t => /^あと\d/.test(t)), 'the time is a separate bold label');
+  }
+  const m = render(clean(), 'medium');
+  for (const name of ['Claude', 'Codex', 'Antigravity', 'Colab', 'あと', '2h', '3日', '付与まで', '18日']) assert.ok(m.labels.includes(name), name);
+  assert.equal(m.labels.filter(t => t === '5h').length, 1, 'window labels appear once');
+  assert.equal(m.labels.filter(t => t === '週').length, 1);
+  const s = render(clean(), 'small');
+  assert.ok(s.labels.includes('AG') && s.labels.includes('18日'));
+  assert.ok(!s.labels.includes('あと'));
+  assert.ok(render(clean(), 'large').labels.includes('2時間'));
+  // A stale service swaps its name for the age, in orange.
+  const old = clean(); old.records[1].observedAt = now - 18 * 60;
+  const st = render(old, 'medium');
+  assert.ok(st.labels.includes('18分前') && !st.labels.includes('Codex'));
+  // A plan without a 5-hour window gets a single ring and one number.
+  const noFive = clean(); noFive.records[1].fiveHour = null;
+  const nf = render(noFive, 'medium');
+  assert.equal(ringOf(nf, '10A37F').filter(op => op.hex === '8e8e93').length, 1);
+  assert.ok(!nf.labels.includes('25'));
+  // The table style stays available per widget (parameter) or globally (style argument).
+  assert.ok(render(clean(), 'medium', 'table').labels.includes('5時間'));
+  assert.ok(render(clean(), 'medium', '', 'table').labels.includes('5時間'));
+  assert.equal(render(clean(), 'medium', 'table').rings.length, 0);
+  assert.equal(api.widgetOptions('rings').style, 'rings');
+  assert.equal(api.widgetOptions('table colab').style, 'table');
+  assert.equal(api.widgetOptions('colab').style, null);
+  for (const element of elements)
+    for (const key of ['textColor', 'backgroundColor'])
       if (element[key]) assert.equal(element[key].dynamic, true);
 });
 test('lock screen: monochrome inline, rectangular and circular widgets', () => {

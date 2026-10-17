@@ -1,11 +1,12 @@
 // AI Usage — Scriptable widget for Claude / Codex / Antigravity limits and Google Colab compute units.
 // Reads iCloud Drive › Scriptable › ai-usage-snapshot-v2.json written by the Mac app.
 // No network APIs and no credentials: the script only reads that file.
-// Widget parameter (space separated): demo · claude|codex|antigravity|colab · grant=<day> · lang=en|ja|zh|ko
+// Widget parameter (space separated): demo · rings|table · claude|codex|antigravity|colab · grant=<day> · lang=en|ja|zh|ko
 
 const SERVICE_IDS = ["claude", "codex", "antigravity", "colab"];
 const SOURCES = ["claudeStatusline", "claudeCli", "codexAppServer", "antigravityStatusline", "antigravityCli", "codexBar", "colabCli", "manual", "demo"];
 const SNAPSHOT_FILE = "ai-usage-snapshot-v2.json";
+const STYLES = ["rings", "table"];          // Home Screen layouts; rings is the default
 const MAX_KB = 16;
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,7 @@ const I18N = {
     computeUnits: "Compute units", used: "Used {v} CU", grantIn: "Next grant in {n} days",
     grantTomorrow: "Next grant tomorrow", grantWaiting: "Grant pending (due {d})", grantShort: "{n}d",
     grantShortWaiting: "Pending", inlineGrant: "grant in {n}d", inlineWaiting: "grant pending",
+    ringLegend: "Outer 5h · inner weekly", grantUntil: "Next grant",
     units: { d: "d", h: "h", m: "m", sep: " " }, unitsShort: { d: "d", h: "h", m: "m", sep: "" }
   },
   ja: {
@@ -27,6 +29,7 @@ const I18N = {
     computeUnits: "計算ユニット", used: "消費 {v} CU", grantIn: "次の付与まで あと{n}日",
     grantTomorrow: "次の付与 明日", grantWaiting: "付与待ち（予定{d}日）", grantShort: "あと{n}日",
     grantShortWaiting: "付与待ち", inlineGrant: "付与まで{n}日", inlineWaiting: "付与待ち",
+    ringLegend: "外 5時間 ・ 内 週", grantUntil: "付与まで",
     units: { d: "日", h: "時間", m: "分", sep: "" }, unitsShort: { d: "日", h: "h", m: "m", sep: "", only: "分" }
   },
   zh: {
@@ -36,6 +39,7 @@ const I18N = {
     computeUnits: "计算单元", used: "已用 {v} CU", grantIn: "距下次发放 {n} 天",
     grantTomorrow: "明天发放", grantWaiting: "等待发放（预计{d}日）", grantShort: "{n}天",
     grantShortWaiting: "待发放", inlineGrant: "{n}天后发放", inlineWaiting: "待发放",
+    ringLegend: "外圈 5小时 · 内圈 每周", grantUntil: "距发放",
     units: { d: "天", h: "小时", m: "分钟", sep: "" }, unitsShort: { d: "天", h: "h", m: "m", sep: "", only: "分钟" }
   },
   ko: {
@@ -45,6 +49,7 @@ const I18N = {
     computeUnits: "컴퓨팅 단위", used: "{v} CU 사용", grantIn: "다음 지급까지 {n}일",
     grantTomorrow: "내일 지급", grantWaiting: "지급 대기 ({d}일 예정)", grantShort: "{n}일",
     grantShortWaiting: "지급 대기", inlineGrant: "{n}일 후 지급", inlineWaiting: "지급 대기",
+    ringLegend: "바깥 5시간 · 안쪽 주간", grantUntil: "다음 지급",
     units: { d: "일", h: "시간", m: "분", sep: " " }, unitsShort: { d: "일", h: "h", m: "m", sep: "", only: "분" }
   }
 };
@@ -181,7 +186,10 @@ function loadSettings() {
     const path = cloud.joinPath(cloud.documentsDirectory(), "ai-usage-settings.json");
     if (!cloud.fileExists(path) || cloud.fileSize(path) > 4) return {};
     const raw = JSON.parse(cloud.readString(path));
-    return Number.isInteger(raw.colabGrantDay) ? { colabGrantDay: raw.colabGrantDay } : {};
+    const settings = {};
+    if (Number.isInteger(raw.colabGrantDay)) settings.colabGrantDay = raw.colabGrantDay;
+    if (STYLES.includes(raw.style)) settings.style = raw.style;
+    return settings;
   } catch (_) { return {}; }
 }
 
@@ -275,7 +283,8 @@ function widgetOptions(parameter) {
   const grant = tokens.map(x => /^grant=(\d{1,2})$/.exec(x)).find(Boolean);
   const lang = tokens.map(x => /^lang=([a-z-]+)$/.exec(x)).find(Boolean);
   return { demo: tokens.includes("demo"), service: tokens.find(x => SERVICE_NAMES[x]) || null,
-    grantDay: grant ? Number(grant[1]) : null, lang: lang ? lang[1] : null };
+    grantDay: grant ? Number(grant[1]) : null, lang: lang ? lang[1] : null,
+    style: tokens.find(x => STYLES.includes(x)) || null };
 }
 
 // The window that runs out first for a service: the lowest remaining percentage it has.
@@ -437,8 +446,9 @@ function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, gr
 // Home Screen. Quota services (time windows that refill) are rows; Colab is a balance that only
 // goes down, so it sits under a divider and leads with the CU amount instead of a percentage.
 // Widths fit the smallest iPhone widgets (155 / 329×155 / 329×345); bigger devices widen the gaps.
-function buildWidget(snapshot, status, family, now = Date.now() / 1000, parameter = "", grantDay = null) {
+function buildWidget(snapshot, status, family, now = Date.now() / 1000, parameter = "", grantDay = null, style = null) {
   if (String(family).startsWith("accessory")) return finish(buildAccessory(snapshot, family, parameter, now, grantDay), now);
+  if ((style || widgetOptions(parameter).style || "rings") === "rings") return finish(buildRingWidget(snapshot, status, family, now, grantDay), now);
   const large = family === "large" || family === "extraLarge";
   const small = family === "small";
   const theme = widgetTheme();
@@ -599,6 +609,190 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
   return finish(w, now);
 }
 
+// ---------------------------------------------------------------------------
+// Home Screen, ring style (the default). One column per service: outer ring = 5-hour window,
+// inner ring = weekly, both remaining percentages inside, and only the reset times below.
+// Colors evoke each tool's own brand; the inner ring is a lighter tone of the same hue.
+const RING_COLORS = { claude: ["D97757", "EDB49C"], codex: ["10A37F", "7DD3BB"],
+  antigravity: ["5B7CFA", "A9B9FF"], colab: ["F9AB00"] };
+
+// Rings only (no text, so the numbers on top can follow light and dark mode). The neutral gray
+// track reads on both backgrounds.
+function drawRings(size, rings) {
+  const ctx = new DrawContext();
+  ctx.size = new Size(size, size); ctx.opaque = false; ctx.respectScreenScale = true;
+  const c = size / 2, width = Math.max(3, size * 0.058), gap = size * 0.03;
+  const arc = (radius, to) => {
+    const path = new Path(), steps = Math.max(2, Math.ceil(to / 4)), points = [];
+    for (let i = 0; i <= steps; i++) {
+      const a = (to * i / steps - 90) * Math.PI / 180;
+      points.push(new Point(c + radius * Math.cos(a), c + radius * Math.sin(a)));
+    }
+    path.addLines(points); return path;
+  };
+  ctx.setLineWidth(width);
+  rings.forEach((ring, i) => {
+    const radius = c - width / 2 - 0.5 - i * (width + gap);
+    ctx.setStrokeColor(new Color("8e8e93", 0.22)); ctx.addPath(arc(radius, 360)); ctx.strokePath();
+    if (ring.value != null && ring.value > 0) {
+      ctx.setStrokeColor(new Color(ring.color)); ctx.addPath(arc(radius, 3.6 * Math.min(ring.value, 100))); ctx.strokePath();
+    }
+  });
+  return ctx.getImage();
+}
+
+function buildRingWidget(snapshot, status, family, now, grantDay) {
+  const large = family === "large" || family === "extraLarge", small = family === "small";
+  const theme = widgetTheme();
+  const w = new ListWidget();
+  w.backgroundColor = theme.background;
+  const text = (parent, value, size, color = theme.text, weight = "regular", scale = 0.7) => {
+    const t = parent.addText(value);
+    t.font = weight === "number" ? Font.semiboldRoundedSystemFont(size) :
+      weight === "semibold" ? Font.semiboldSystemFont(size) : Font.systemFont(size);
+    t.textColor = color; t.lineLimit = 1; t.minimumScaleFactor = scale; return t;
+  };
+  const row = parent => { const s = parent.addStack(); s.layoutHorizontally(); s.centerAlignContent(); return s; };
+  const box = (parent, width, height) => {
+    const s = parent.addStack(); s.layoutVertically(); s.centerAlignContent(); s.size = new Size(width, height); return s;
+  };
+  const record = id => snapshot.records.find(r => r.service === id) || { observedAt: null };
+  const stale = r => r.observedAt != null && now - r.observedAt > 900;
+  const hint = snapshot.isDemo ? "DEMO" : status === "syncFailed" || status === "cachedNewer" ? t("syncPending") : "";
+  const ids = ["claude", "codex", "antigravity", "colab"];
+  const pad = small ? [10, 9] : large ? [14, 14] : [11, 9];
+  w.setPadding(pad[0], pad[1], pad[0], pad[1]);
+  const size = small ? (hint ? 46 : 50) : large ? 82 : (hint ? 60 : 66);
+  const lineH = 15, font = 11;
+
+  // A stale column swaps its name for how old the value is ("18m ago"), in orange.
+  const name = (parent, id, r, fontSize) => {
+    const line = row(parent); line.addSpacer();
+    if (stale(r)) {
+      const minutes = Math.floor((now - r.observedAt) / 60);
+      const coarse = minutes < 60 ? minutes : minutes < 1440 ? Math.floor(minutes / 60) * 60 : Math.floor(minutes / 1440) * 1440;
+      text(line, t("ago", { d: duration(coarse, true) }), fontSize, theme.warning, "semibold", 0.6);
+    } else text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, theme.secondary, "regular", 0.6);
+    line.addSpacer();
+  };
+  // "in 2h" with the time in bold: the localized pattern's text around {d} stays secondary.
+  const inline = (line, d) => {
+    const [before, after] = I18N[LANG].in.split("{d}");
+    if (before.trim()) { text(line, before.trim(), font, theme.secondary); line.addSpacer(3); }
+    text(line, d, font, theme.text, "semibold");
+    if (after.trim()) { line.addSpacer(3); text(line, after.trim(), font, theme.secondary); }
+  };
+  const resetLine = (parent, width, win, label) => {
+    const line = row(parent); line.size = new Size(width, lineH); line.addSpacer();
+    if (win && win.resetsAt != null) {
+      if (label) { text(line, label, font, theme.secondary); line.addSpacer(4); }
+      if (win.resetsAt <= now) text(line, t("awaitingRefresh"), font, theme.secondary);
+      else inline(line, duration(Math.ceil((win.resetsAt - now) / 60), !large));
+    }
+    line.addSpacer();
+  };
+  const ring = (parent, id, r) => {
+    const colors = RING_COLORS[id], s = box(parent, size, size);
+    const main = Math.round(size * 0.24), sub = Math.max(9, Math.round(size * 0.16));
+    let rings, top = null, bottom = null, unit = "%";
+    if (id === "colab") {
+      const a = allocationStats(r), g = grantStatus(r, grantDay, now);
+      rings = [{ value: a ? a.remainingPercent : null, color: colors[0] }];
+      top = r.balance == null ? null : cuText(r.balance, 0); unit = "";
+      bottom = small && g ? (g.waiting ? t("grantShortWaiting") : duration(Math.max(1, Math.ceil((g.nextAt - now) / 86400)) * 1440, true)) : "CU";
+    } else {
+      const five = r.fiveHour ? remaining(r.fiveHour, now) : undefined;
+      const week = r.weekly ? remaining(r.weekly, now) : undefined;
+      const shown = [five, week].filter(v => v !== undefined);
+      rings = shown.length ? shown.map((value, i) => ({ value, color: colors[i] })) : [{ value: null, color: colors[0] }];
+      top = shown.length ? shown[0] : null;
+      if (shown.length === 2) bottom = week == null ? "—" : week;
+    }
+    s.backgroundImage = drawRings(size, rings);
+    s.addSpacer();
+    const t1 = row(s); t1.bottomAlignContent();
+    text(t1, top == null ? "—" : String(typeof top === "number" ? Math.round(top) : top), main, theme.text, "number", 0.6);
+    if (top != null && unit) { t1.addSpacer(1); text(t1, unit, Math.round(main * 0.55), theme.secondary, "number"); }
+    if (bottom != null) {
+      const t2 = row(s); t2.bottomAlignContent();
+      if (typeof bottom === "number") {
+        text(t2, String(Math.round(bottom)), sub, theme.secondary, "number");
+        t2.addSpacer(1); text(t2, "%", Math.round(sub * 0.75), theme.secondary, "number");
+      } else text(t2, bottom, sub - 1, theme.secondary, "regular", 0.6);
+    }
+    s.addSpacer();
+  };
+  const colabLines = (parent, width, r) => {
+    const g = grantStatus(r, grantDay, now), a = allocationStats(r);
+    const one = row(parent); one.size = new Size(width, lineH); one.addSpacer();
+    const two = row(parent); two.size = new Size(width, lineH); two.addSpacer();
+    if (large) {
+      if (g) text(one, grantLabel(g, now), font, g.waiting ? theme.warning : theme.text, "semibold");
+      text(two, a ? `${cuText(a.total, 0)} CU · ${t("used", { v: cuText(a.consumed, 1) })}` : t("computeUnits"), font, theme.secondary);
+    } else if (g) {
+      text(one, t("grantUntil"), font, theme.secondary);
+      if (g.waiting) text(two, t("grantShortWaiting"), font, theme.warning, "semibold");
+      else inline(two, duration(Math.max(1, Math.ceil((g.nextAt - now) / 86400)) * 1440, true));
+    }
+    one.addSpacer(); two.addSpacer();
+  };
+
+  if (small) {
+    if (hint) { const h = row(w); h.addSpacer(); text(h, hint, 8, theme.warning, "semibold"); w.addSpacer(2); }
+    for (const pair of [ids.slice(0, 2), ids.slice(2)]) {
+      w.addSpacer();
+      const line = row(w);
+      pair.forEach((id, i) => {
+        if (i) line.addSpacer();
+        const r = record(id), cell = box(line, 64, size + 15);
+        name(cell, id, r, 10); cell.addSpacer(2); ring(cell, id, r);
+      });
+    }
+    w.addSpacer();
+    return w;
+  }
+
+  if (large) {
+    const head = row(w);
+    text(head, t("ringLegend"), 10, theme.secondary); head.addSpacer();
+    if (hint) text(head, hint, 10, theme.warning, "semibold");
+    w.addSpacer(6);
+    for (const pair of [ids.slice(0, 2), ids.slice(2)]) {
+      w.addSpacer();
+      const line = row(w);
+      pair.forEach((id, i) => {
+        if (i) line.addSpacer();
+        const r = record(id), cell = box(line, 146, 15 + 4 + size + 6 + lineH * 2);
+        name(cell, id, r, 12); cell.addSpacer(4); ring(cell, id, r); cell.addSpacer(6);
+        if (id === "colab") colabLines(cell, 146, r);
+        else { resetLine(cell, 146, r.fiveHour, t("fiveShort")); resetLine(cell, 146, r.weekly, t("weekShort")); }
+      });
+    }
+    w.addSpacer();
+    return w;
+  }
+
+  // Medium: the window labels appear once, at the left edge of the two reset lines.
+  if (hint) { const h = row(w); h.addSpacer(); text(h, hint, 8, theme.warning, "semibold"); w.addSpacer(2); }
+  const colW = 72, colH = 14 + 5 + size + 7 + lineH * 2;
+  w.addSpacer();
+  const main = row(w);
+  const side = box(main, 16, colH); side.addSpacer();
+  const hasFiveHour = ["claude", "codex", "antigravity"].some(id => record(id).fiveHour != null);
+  for (const label of [hasFiveHour ? t("fiveShort") : "", t("weekShort")]) {
+    const l = row(side); l.size = new Size(16, lineH); text(l, label, font, theme.secondary, "semibold"); l.addSpacer();
+  }
+  ids.forEach(id => {
+    main.addSpacer();
+    const r = record(id), col = box(main, colW, colH);
+    name(col, id, r, 11); col.addSpacer(5); ring(col, id, r); col.addSpacer(7);
+    if (id === "colab") colabLines(col, colW, r);
+    else { resetLine(col, colW, r.fiveHour); resetLine(col, colW, r.weekly); }
+  });
+  w.addSpacer();
+  return w;
+}
+
 function finish(w, now) {
   w.refreshAfterDate = new Date((now + 600) * 1000);
   w.url = `scriptable:///run?scriptName=${encodeURIComponent(Script.name())}`;
@@ -610,8 +804,10 @@ const options = widgetOptions(args.widgetParameter);
 setLanguage(options.lang || Device.language());
 const result = await loadSnapshot(options.demo);
 const family = config.widgetFamily || "medium";
-const grantDay = options.grantDay || (options.demo ? null : loadSettings().colabGrantDay) || null;
-const widget = buildWidget(result.snapshot, result.status, family, Date.now() / 1000, args.widgetParameter, grantDay);
+const settings = options.demo ? {} : loadSettings();
+const grantDay = options.grantDay || settings.colabGrantDay || null;
+const style = options.style || settings.style || "rings";
+const widget = buildWidget(result.snapshot, result.status, family, Date.now() / 1000, args.widgetParameter, grantDay, style);
 Script.setWidget(widget);
 if (!config.runsInWidget) await widget.presentMedium();
 Script.complete();

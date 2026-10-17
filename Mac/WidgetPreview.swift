@@ -9,6 +9,12 @@ enum PreviewSize: String, CaseIterable, Identifiable {
     var height: CGFloat { switch self { case .small: return 155; case .medium: return 169; case .large: return 345 } }
 }
 
+enum PreviewStyle: String, CaseIterable, Identifiable {
+    case rings, table
+    var id: String { rawValue }
+    var title: String { self == .rings ? String(localized: "Rings") : String(localized: "Table") }
+}
+
 enum PreviewAppearance: String, CaseIterable, Identifiable {
     case system, light, dark
     var id: String { rawValue }
@@ -25,12 +31,16 @@ struct WidgetPreviewPanel: View {
     @State private var size = PreviewSize.medium
     @State private var appearance = PreviewAppearance.system
     @State private var sample = false
+    @State private var style = PreviewStyle.rings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Widget").font(.headline)
                 Spacer()
+                Picker("Style", selection: $style) {
+                    ForEach(PreviewStyle.allCases) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented).labelsHidden().frame(width: 130)
                 Toggle("Sample data", isOn: $sample).toggleStyle(.switch).controlSize(.small)
                     .fixedSize()
             }
@@ -46,7 +56,7 @@ struct WidgetPreviewPanel: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 18).fill(Color.primary.opacity(0.035))
                 WidgetPreviewWebView(snapshot: sample ? .demo(at: now) : snapshot, now: now,
-                    size: size, appearance: appearance.resolved(colorScheme))
+                    size: size, appearance: appearance.resolved(colorScheme), style: style)
                     .frame(width: size.width, height: size.height)
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .shadow(color: .black.opacity(0.08), radius: 10, y: 3)
@@ -64,6 +74,7 @@ struct WidgetPreviewWebView: NSViewRepresentable {
     let now: Date
     let size: PreviewSize
     let appearance: String
+    let style: PreviewStyle
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -92,7 +103,7 @@ struct WidgetPreviewWebView: NSViewRepresentable {
         // The snapshot encoder only allows numerical quota metadata, never account secrets.
         // The preview speaks the app's language, like the widget follows the iPhone's.
         let language = (Bundle.main.preferredLocalizations.first ?? "en").filter { $0.isLetter || $0 == "-" }
-        let call = "window.renderUsagePreview(\(json), '\(size.rawValue)', '\(appearance)', \(now.timeIntervalSince1970), '\(language)');"
+        let call = "window.renderUsagePreview(\(json), '\(size.rawValue)', '\(appearance)', \(now.timeIntervalSince1970), '\(language)', '\(style.rawValue)');"
         context.coordinator.update(view, call: call)
     }
 
