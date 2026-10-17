@@ -13,7 +13,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; user-select: 
 i { display: block; }
 </style>
 </head>
-<body><main id="preview" aria-label="ウィジェットのプレビュー"></main>
+<body><main id="preview" aria-label="Widget preview"></main>
 <script>
 // A local adapter for Scriptable's layout primitives. No network or file APIs.
 class Stack {
@@ -87,7 +87,7 @@ window.renderUsagePreview = (raw, family, appearance, now, language = 'en') => {
     preview.innerHTML = previewMarkup(buildWidget(snapshot, '', family, now), appearance);
     return { ok: true, family, appearance };
   } catch (_) {
-    preview.textContent = 'プレビューを読み込めませんでした。';
+    preview.textContent = 'Couldn’t load the preview.';
     return { ok: false };
   }
 };

@@ -76,5 +76,5 @@ if __name__ == "__main__":
         result = collect()
         print(json.dumps(result, allow_nan=False))
     except Exception:
-        print("Codexの残量を取得できません。公式CLIのログイン状態を確認してください。", file=sys.stderr)
+        print("Can’t read Codex usage. Check that the official Codex CLI is signed in.", file=sys.stderr)
         sys.exit(1)

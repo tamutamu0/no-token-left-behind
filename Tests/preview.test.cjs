@@ -31,5 +31,5 @@ test('offline preview runs the shipped widget for every size and appearance with
   assert.equal(context.FileManager, undefined);
   assert.equal(context.fetch, undefined);
   assert.equal(context.window.renderUsagePreview({}, 'medium', 'light', now).ok, false);
-  assert.equal(element.textContent, 'プレビューを読み込めませんでした。');
+  assert.equal(element.textContent, 'Couldn’t load the preview.');
 });

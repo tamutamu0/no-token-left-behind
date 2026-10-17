@@ -12,16 +12,16 @@ def main():
             return
         result = antigravity_record(json.loads(text))
         if result is None:
-            print("Antigravity · 残量取得待ち")
+            print("Antigravity · usage pending")
             return
         write_record(result)
         labels = []
-        for label, key in (("5h", "fiveHour"), ("週", "weekly")):
+        for label, key in (("5h", "fiveHour"), ("wk", "weekly")):
             if result[key] is not None:
-                labels.append(f"{label} 残り{100 - result[key]['usedPercent']:.0f}%")
+                labels.append(f"{label} {100 - result[key]['usedPercent']:.0f}% left")
         print("Antigravity · " + " / ".join(labels))
     except Exception:
-        print("Antigravity · 残量取得待ち")
+        print("Antigravity · usage pending")
 
 
 if __name__ == "__main__":

@@ -12,17 +12,17 @@ def main():
             return
         result = claude_record(json.loads(text))
         if result is None:
-            print("AI残量: 取得待ち")
+            print("Claude · usage pending")
             return
         write_claude(result)
         labels = []
-        for name, key in (("5h", "fiveHour"), ("週", "weekly")):
+        for name, key in (("5h", "fiveHour"), ("wk", "weekly")):
             if result[key] is not None:
-                labels.append(f"{name} 残り{100 - result[key]['usedPercent']:.0f}%")
+                labels.append(f"{name} {100 - result[key]['usedPercent']:.0f}% left")
         print("Claude · " + " / ".join(labels))
     except Exception:
         # Never echo payloads, filesystem paths, OAuth data or exception strings.
-        print("AI残量: 取得待ち")
+        print("Claude · usage pending")
 
 
 if __name__ == "__main__":
