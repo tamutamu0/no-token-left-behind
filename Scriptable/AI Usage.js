@@ -664,8 +664,8 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   const record = id => snapshot.records.find(r => r.service === id) || { observedAt: null };
   const stale = r => r.observedAt != null && now - r.observedAt > 900;
   const ids = ["claude", "codex", "antigravity", "colab"];
-  // Names always stay; a stale service turns its name orange, and the age of the oldest value
-  // appears once in the corner (when the Mac sleeps, every service goes stale together).
+  // The age of the oldest stale value appears once in the corner (when the Mac sleeps, every
+  // service goes stale together).
   const oldest = ids.map(record).filter(stale).map(r => r.observedAt).sort((a, b) => a - b)[0];
   const ageText = oldest == null ? "" : (() => {
     const minutes = Math.floor((now - oldest) / 60);
@@ -680,10 +680,10 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   const size = small ? (hint ? 46 : 50) : large ? 82 : (hint ? 58 : 64);
   const lineH = 15, font = 11;
 
-  const name = (parent, id, r, fontSize) => {
+  // Names stay neutral; staleness is reported once, in the corner.
+  const name = (parent, id, fontSize) => {
     const line = row(parent); line.addSpacer();
-    text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, stale(r) ? theme.warning : theme.secondary,
-      stale(r) ? "semibold" : "regular", 0.6);
+    text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, theme.secondary, "regular", 0.6);
     line.addSpacer();
   };
   // "in 2h" with the time in bold: the localized pattern's text around {d} stays secondary.
@@ -703,7 +703,11 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
     line.addSpacer();
   };
   const ring = (parent, id, r) => {
-    const colors = RING_COLORS[id], s = box(parent, size, size);
+    // A fixed-size stack sits at the leading edge of a column on a device, so it is centred
+    // inside a full-width row instead.
+    const holder = row(parent); holder.addSpacer();
+    const colors = RING_COLORS[id], s = box(holder, size, size);
+    holder.addSpacer();
     const main = Math.round(size * 0.24), sub = Math.max(9, Math.round(size * 0.16));
     let rings, top = null, bottom = null, unit = "%";
     if (id === "colab") {
@@ -764,7 +768,7 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
       pair.forEach((id, i) => {
         if (i) line.addSpacer();
         const r = record(id), cell = box(line, 64, size + 15);
-        name(cell, id, r, 10); cell.addSpacer(2); ring(cell, id, r);
+        name(cell, id, 10); cell.addSpacer(2); ring(cell, id, r);
       });
     }
     w.addSpacer();
@@ -782,7 +786,7 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
       pair.forEach((id, i) => {
         if (i) line.addSpacer();
         const r = record(id), cell = box(line, 146, 15 + 4 + size + 6 + lineH * 2);
-        name(cell, id, r, 12); cell.addSpacer(4); ring(cell, id, r); cell.addSpacer(6);
+        name(cell, id, 12); cell.addSpacer(4); ring(cell, id, r); cell.addSpacer(6);
         if (id === "colab") colabLines(cell, 146, r);
         else { resetLine(cell, 146, r.fiveHour, t("fiveShort")); resetLine(cell, 146, r.weekly, t("weekShort")); }
       });
@@ -804,7 +808,7 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   ids.forEach(id => {
     main.addSpacer();
     const r = record(id), col = box(main, colW, colH);
-    name(col, id, r, 11); col.addSpacer(5); ring(col, id, r); col.addSpacer(7);
+    name(col, id, 11); col.addSpacer(5); ring(col, id, r); col.addSpacer(7);
     if (id === "colab") colabLines(col, colW, r);
     else { resetLine(col, colW, r.fiveHour); resetLine(col, colW, r.weekly); }
   });

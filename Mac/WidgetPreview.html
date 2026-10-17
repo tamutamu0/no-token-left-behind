@@ -74,8 +74,9 @@ function previewMarkup(node, appearance, parentDirection = 'column') {
   const styles = [`display:flex;flex-direction:${node.direction}`, `align-items:${node.center ? 'center' : node.bottom ? 'baseline' : 'stretch'}`, 'flex-shrink:0'];
   if (node.padding) styles.push(`padding:${node.padding.map(v => v + 'px').join(' ')}`);
   // Like Scriptable on a device: a stack without a fixed width fills its parent — across a row,
-  // and the full width of a column — and its own content starts at the leading edge.
-  if (node.size?.width > 0) styles.push(`width:${node.size.width}px`);
+  // and the full width of a column — and its own content starts at the leading edge. A stack
+  // with a fixed width inside a column sits at the leading edge too, whatever the alignment.
+  if (node.size?.width > 0) styles.push(`width:${node.size.width}px`, ...(parentDirection === 'column' ? ['align-self:flex-start'] : []));
   else if (parentDirection === 'row') styles.push('flex:1;min-width:0');
   else styles.push('align-self:stretch');
   if (node.size?.height > 0) styles.push(`height:${node.size.height}px`);

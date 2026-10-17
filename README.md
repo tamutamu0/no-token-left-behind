@@ -95,7 +95,7 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 - Below the ring: **when each one resets**. The `5h` / `wk` labels at the left edge name the two lines once for every column.
 - A plan without a 5-hour window gets a **single ring** and one number — no dash, no empty ring.
 - **Colab** is a balance, not a window: compute units left in the ring, and the days until the next grant below.
-- A value more than 15 minutes old turns the service name **orange**, and the age of the oldest value appears once in the corner (“18m ago”).
+- When values are more than 15 minutes old, the age of the oldest one appears once in the corner, in **orange** (“18m ago”).
 
 ## Gallery
 
