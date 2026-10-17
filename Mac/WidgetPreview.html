@@ -20,6 +20,7 @@ class Stack {
   constructor(type = 'stack') { this.type = type; this.children = []; this.direction = 'row'; }
   addStack() { const child = new Stack(); this.children.push(child); return child; }
   addText(value) { const child = { type: 'text', value }; this.children.push(child); return child; }
+  addImage(img) { const child = { type: 'image', img }; this.children.push(child); return child; }
   addSpacer(value) { this.children.push({ type: 'spacer', value }); }
   layoutHorizontally() { this.direction = 'row'; }
   layoutVertically() { this.direction = 'column'; }
@@ -28,7 +29,19 @@ class Stack {
   setPadding(...values) { this.padding = values; }
 }
 class ListWidget extends Stack { constructor() { super('widget'); this.direction = 'column'; } }
-class Color { constructor(hex) { this.hex = hex; } static dynamic(light, dark) { return { light, dark }; } }
+class Color { constructor(hex, alpha = 1) { this.hex = hex; this.alpha = alpha; } static dynamic(light, dark) { return { light, dark }; } }
+class Point { constructor(x, y) { this.x = x; this.y = y; } }
+class Rect { constructor(x, y, width, height) { Object.assign(this, { x, y, width, height }); } }
+class Path { constructor() { this.points = []; } addLines(points) { this.points.push(...points); } }
+// Records drawing operations; previewMarkup turns them into inline SVG (no img-src needed).
+class DrawContext {
+  constructor() { this.ops = []; this.lineWidth = 1; this.align = 'left'; }
+  setLineWidth(w) { this.lineWidth = w; } setStrokeColor(c) { this.stroke = c; }
+  addPath(p) { this.path = p; } strokePath() { this.ops.push({ kind: 'path', points: this.path.points, color: this.stroke, width: this.lineWidth }); }
+  setTextAlignedCenter() { this.align = 'center'; } setFont(f) { this.font = f; } setTextColor(c) { this.fill = c; }
+  drawTextInRect(text, rect) { this.ops.push({ kind: 'text', text, rect, font: this.font, color: this.fill, align: this.align }); }
+  getImage() { return { drawing: true, size: this.size, ops: this.ops }; }
+}
 class Size { constructor(width, height) { this.width = width; this.height = height; } }
 const previewFont = (size, weight = 400, rounded = false) => ({ size, weight, rounded });
 const Font = { systemFont: n => previewFont(n), semiboldSystemFont: n => previewFont(n, 600),
@@ -40,7 +53,15 @@ const escapePreviewText = value => String(value).replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function previewMarkup(node, appearance, parentDirection = 'column') {
-  const color = c => '#' + (c[appearance] || c).hex;
+  const color = c => { const v = c[appearance] || c; if (v.alpha != null && v.alpha < 1) {
+    const n = parseInt(v.hex, 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${v.alpha})`; } return '#' + v.hex; };
+  if (node.type === 'image') {
+    const { size, ops } = node.img, w = node.imageSize?.width || size.width, h = node.imageSize?.height || size.height;
+    const body = ops.map(op => op.kind === 'path'
+      ? `<polyline fill="none" stroke-linecap="round" stroke="${color(op.color)}" stroke-width="${op.width}" points="${op.points.map(p => p.x.toFixed(2) + ',' + p.y.toFixed(2)).join(' ')}"/>`
+      : `<text x="${op.align === 'center' ? op.rect.x + op.rect.width / 2 : op.rect.x}" y="${op.rect.y + op.rect.height * 0.8}" text-anchor="${op.align === 'center' ? 'middle' : 'start'}" font-size="${op.font.size}" font-weight="${op.font.weight}" fill="${color(op.color)}" font-family="${op.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(op.text)}</text>`).join('');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${size.width} ${size.height}" style="flex-shrink:0;display:block">${body}</svg>`;
+  }
   if (node.type === 'text') {
     return `<span class="text" style="font-size:${node.font.size}px;font-weight:${node.font.weight};color:${color(node.textColor)};font-family:${node.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(node.value)}</span>`;
   }

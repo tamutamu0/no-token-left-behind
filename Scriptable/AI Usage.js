@@ -233,6 +233,67 @@ function tightest(record, now) {
   return options.sort((a, b) => a.value - b.value)[0] || null;
 }
 
+const DIAL = 72;
+
+// The quota service whose tightest window has the least left (what the lock screen should warn about).
+function mostConstrained(snapshot, now) {
+  return ["claude", "codex", "antigravity"]
+    .map(id => ({ id, t: tightest(snapshot.records.find(r => r.service === id) || {}, now) }))
+    .filter(x => x.t).sort((a, b) => a.t.value - b.t.value).map(x => x.id)[0] || null;
+}
+
+// Draws a dial: up to two rings (each {value 0-100}) plus centred text lines. White only;
+// iOS tints Lock Screen widgets to the wallpaper.
+function drawDial(rings, lines) {
+  const ctx = new DrawContext();
+  ctx.size = new Size(DIAL, DIAL); ctx.opaque = false; ctx.respectScreenScale = true;
+  const c = DIAL / 2;
+  const arc = (radius, from, to) => {
+    const path = new Path(), steps = Math.max(2, Math.ceil((to - from) / 4));
+    const points = [];
+    for (let i = 0; i <= steps; i++) {
+      const a = (from + (to - from) * i / steps - 90) * Math.PI / 180;
+      points.push(new Point(c + radius * Math.cos(a), c + radius * Math.sin(a)));
+    }
+    path.addLines(points); return path;
+  };
+  rings.forEach((ring, i) => {
+    const width = i === 0 ? 5 : 4, radius = c - 3 - i * 7.5;
+    ctx.setLineWidth(width);
+    ctx.setStrokeColor(new Color("ffffff", 0.25)); ctx.addPath(arc(radius, 0, 360)); ctx.strokePath();
+    if (ring.value != null && ring.value > 0) {
+      ctx.setStrokeColor(new Color("ffffff", 1)); ctx.addPath(arc(radius, 0, 3.6 * Math.min(ring.value, 100))); ctx.strokePath();
+    }
+  });
+  ctx.setTextAlignedCenter();
+  for (const line of lines) {
+    ctx.setFont(line.font); ctx.setTextColor(new Color("ffffff", line.alpha == null ? 1 : line.alpha));
+    ctx.drawTextInRect(line.text, new Rect(0, line.y, DIAL, line.h));
+  }
+  return ctx.getImage();
+}
+
+function quotaDial(id, record, now) {
+  const five = record.fiveHour ? remaining(record.fiveHour, now) : null;
+  const week = record.weekly ? remaining(record.weekly, now) : null;
+  const t = tightest(record, now);
+  const rings = [five, week].filter((v, i) => (i === 0 ? record.fiveHour : record.weekly) != null).map(value => ({ value }));
+  return drawDial(rings.length ? rings : [{ value: null }], [
+    { text: SHORT_NAMES[id], font: Font.semiboldSystemFont(8), y: 20, h: 10, alpha: 0.7 },
+    { text: t ? String(Math.round(t.value)) : "—", font: Font.semiboldRoundedSystemFont(18), y: 28, h: 22 },
+    { text: t ? t.label : "", font: Font.systemFont(7), y: 48, h: 9, alpha: 0.7 }
+  ]);
+}
+
+function colabDial(record, percent, grantDay, now) {
+  const g = grantStatus(record, grantDay, now);
+  return drawDial([{ value: percent }], [
+    { text: "Colab", font: Font.semiboldSystemFont(8), y: 18, h: 10, alpha: 0.7 },
+    { text: record.balance == null ? "—" : cuText(record.balance, 0), font: Font.semiboldRoundedSystemFont(17), y: 27, h: 21 },
+    { text: g ? grantShort(g, now) : "CU", font: Font.systemFont(7), y: 47, h: 9, alpha: 0.7 }
+  ]);
+}
+
 function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, grantDay = null) {
   const w = new ListWidget();
   const white = new Color("ffffff"), dim = new Color("ffffff", 0.6), faint = new Color("ffffff", 0.3);
@@ -267,52 +328,56 @@ function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, gr
   }
 
   if (family === "accessoryCircular") {
+    // Activity-style rings drawn as one image: outer = 5時間, inner = 週間, centre = the lower %.
+    // Without a parameter it follows whichever service is closest to running out.
     w.addAccessoryWidgetBackground = true;
-    const id = option.service || "claude";
-    const t = id === "colab" ? null : tightest(record(id), now);
-    // Colab leads with the CU amount, as on the Home Screen; quota services with remaining %.
-    const value = id === "colab" ? colab.balance : t && t.value;
-    w.addSpacer();
-    const top = row(w); top.addSpacer(); text(top, SHORT_NAMES[id], 9, dim, "semibold"); top.addSpacer();
-    const mid = row(w); mid.addSpacer();
-    text(mid, value == null ? "—" : id === "colab" ? cuText(value, 0) : String(Math.round(value)), 20, white, "number");
-    if (value != null && id !== "colab") text(mid, "%", 11, white, "number");
-    mid.addSpacer();
-    const bottom = row(w); bottom.addSpacer();
-    const g = id === "colab" ? grantStatus(colab, grantDay, now) : null;
-    text(bottom, id === "colab" ? (g ? grantShort(g, now) : "CU") : t ? t.label : "", 8, dim); bottom.addSpacer();
-    w.addSpacer();
+    w.setPadding(0, 0, 0, 0);
+    const id = option.service || mostConstrained(snapshot, now) || "claude";
+    const image = id === "colab" ? colabDial(colab, colabPercent, grantDay, now) : quotaDial(id, record(id), now);
+    const img = w.addImage(image);
+    img.imageSize = new Size(DIAL, DIAL);
     return w;
   }
 
-  // accessoryRectangular: the Home Screen table, shrunk. Missing windows stay blank.
+  // accessoryRectangular: one line per service with a thin bar for each window, Colab last.
   w.setPadding(0, 0, 0, 0);
-  const cols = { name: 54, cell: 40, gap: 6 };
+  const cols = { name: 38, num: 24, bar: 24, gap: 7 };
+  const miniBar = (parent, value) => {
+    const track = parent.addStack(); track.size = new Size(cols.bar, 3); track.cornerRadius = 1.5;
+    track.backgroundColor = faint; track.layoutHorizontally();
+    if (value != null && value > 0) {
+      const fill = track.addStack(); fill.size = new Size(cols.bar * Math.min(value, 100) / 100, 3);
+      fill.cornerRadius = 1.5; fill.backgroundColor = white;
+    }
+    track.addSpacer();
+  };
+  const windowCell = (parent, win) => {
+    const c = row(parent); c.size = new Size(cols.num + 3 + cols.bar, 0);
+    if (win == null) return;                       // no such window: leave it blank
+    const value = remaining(win, now);
+    const n = row(c); n.size = new Size(cols.num, 0); n.addSpacer();
+    text(n, value == null ? "—" : String(Math.round(value)), 11, white, "number");
+    c.addSpacer(3); miniBar(c, value);
+  };
   const hasFiveHour = quotaIDs.some(id => record(id).fiveHour != null);
-  const head = row(w); const hn = row(head); hn.size = new Size(cols.name, 0);
-  text(hn, "残り", 9, dim); head.addSpacer();
+  const head = row(w); const hn = row(head); hn.size = new Size(cols.name, 0); text(hn, "残り%", 8, dim);
+  head.addSpacer();
   for (const [i, label] of [hasFiveHour ? "5h" : "", "週"].entries()) {
     if (i) head.addSpacer(cols.gap);
-    const c = row(head); c.size = new Size(cols.cell, 0); c.addSpacer(); if (label) text(c, label, 9, dim);
+    const c = row(head); c.size = new Size(cols.num + 3 + cols.bar, 0); if (label) text(c, label, 8, dim); c.addSpacer();
   }
-  const cell = (parent, value) => {
-    const c = row(parent); c.size = new Size(cols.cell, 0); c.addSpacer();
-    if (value !== undefined) text(c, value == null ? "—" : `${Math.round(value)}%`, 12, white, "number");
-  };
-  for (const id of [...quotaIDs, "colab"]) {
+  for (const id of quotaIDs) {
     const r = record(id), line = row(w);
-    const n = row(line); n.size = new Size(cols.name, 0); text(n, SHORT_NAMES[id], 12, white, "semibold");
+    const n = row(line); n.size = new Size(cols.name, 0); text(n, SHORT_NAMES[id], 11, white, "semibold");
     line.addSpacer();
-    if (id === "colab") {
-      const c = row(line); c.size = new Size(cols.cell * 2 + cols.gap, 0); c.addSpacer();
-      if (colabPercent != null) { text(c, `${cuText(colab.balance, 0)} CU`, 9, dim); c.addSpacer(4); }
-      text(c, colabPercent != null ? `${Math.round(colabPercent)}%` : `${colab.balance == null ? "—" : cuText(colab.balance, 0)} CU`, 12, white, "number");
-    } else {
-      cell(line, r.fiveHour == null ? undefined : remaining(r.fiveHour, now));
-      line.addSpacer(cols.gap);
-      cell(line, r.weekly == null ? undefined : remaining(r.weekly, now));
-    }
+    windowCell(line, r.fiveHour); line.addSpacer(cols.gap); windowCell(line, r.weekly);
   }
+  const foot = row(w);
+  const fn = row(foot); fn.size = new Size(cols.name, 0); text(fn, "Colab", 11, white, "semibold");
+  foot.addSpacer();
+  const g = grantStatus(colab, grantDay, now);
+  text(foot, colab.balance == null ? "— CU" : `${cuText(colab.balance, 0)} CU`, 11, white, "number");
+  if (g) { foot.addSpacer(4); text(foot, grantShort(g, now), 9, dim); }
   return w;
 }
 

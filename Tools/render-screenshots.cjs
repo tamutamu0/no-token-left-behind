@@ -22,9 +22,9 @@ const snap=normalizeSnapshot(demoSnapshot(now),now);
 const scene=document.createElement('div');scene.className='scene '+mode;document.body.appendChild(scene);
 const box=(w,h,inner,extra='')=>'<div class=w style="width:'+w+'px;height:'+h+'px;'+extra+'">'+inner+'</div>';
 if(mode==='lock'){
-  const _C=Color; window.Color=class extends _C{constructor(h,a){super(h)}};
+
   const acc=(f,p,w,h,r)=>{const wd=buildWidget(snap,'',f,now,p,4);return '<div class=acc style="width:'+w+'px;height:'+h+'px;border-radius:'+r+';'+(wd.addAccessoryWidgetBackground?'background:rgba(255,255,255,.18)':'')+'">'+previewMarkup(wd,'dark')+'</div>'};
-  scene.innerHTML='<div>'+acc('accessoryInline','',260,22,'0')+'</div><div class=clock>10:30</div><div class=row>'+acc('accessoryRectangular','',157,72,'10px')+acc('accessoryCircular','claude',72,72,'50%')+acc('accessoryCircular','colab',72,72,'50%')+'</div>';
+  scene.innerHTML='<div>'+acc('accessoryInline','',260,22,'0')+'</div><div class=clock>10:30</div><div class=row>'+acc('accessoryRectangular','',157,72,'10px')+acc('accessoryCircular','',72,72,'50%')+acc('accessoryCircular','claude',72,72,'50%')+acc('accessoryCircular','colab',72,72,'50%')+'</div>';
 }else{
   const ap=mode==='dark'?'dark':'light';
   scene.innerHTML=[['small',170,170],['medium',364,170],['large',364,382]].map(([f,w,h])=>box(w,h,previewMarkup(buildWidget(snap,'',f,now,'',4),ap))).join('');

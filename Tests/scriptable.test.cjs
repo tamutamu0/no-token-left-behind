@@ -96,9 +96,21 @@ function fakeScriptable() {
     constructor() { elements.push(this); }
     addText(t) { labels.push(t); const result = {}; elements.push(result); return result; }
     addStack() { return new Stack(); }
+    addImage(img) { const result = { image: img }; elements.push(result); return result; }
     addSpacer() {} layoutHorizontally() {} layoutVertically() {} centerAlignContent() {} bottomAlignContent() {} setPadding() {}
   }
   context.ListWidget = Stack;
+  context.Point = class { constructor(x, y) { this.x = x; this.y = y; } };
+  context.Rect = class { constructor(x, y, w, h) { Object.assign(this, { x, y, w, h }); } };
+  context.Path = class { constructor() { this.points = []; } addLines(p) { this.points.push(...p); } };
+  context.DrawContext = class {
+    constructor() { this.ops = []; }
+    setLineWidth() {} setStrokeColor(c) { this.stroke = c; } addPath(p) { this.path = p; }
+    strokePath() { this.ops.push({ kind: 'arc', points: this.path.points.length, alpha: this.stroke.alpha }); }
+    setTextAlignedCenter() {} setFont() {} setTextColor(c) { this.fill = c; }
+    drawTextInRect(text) { this.ops.push({ kind: 'text', text, hex: this.fill.hex }); }
+    getImage() { return { ops: this.ops }; }
+  };
   context.Color = class {
     constructor(hex, alpha) { this.hex = hex; this.alpha = alpha; }
     static dynamic(light, dark) { return { light, dark, dynamic: true }; }
@@ -188,14 +200,27 @@ test('lock screen: monochrome inline, rectangular and circular widgets', () => {
   assert.deepEqual(render(clean(), 'accessoryInline', 'claude').labels, ['Claude 週 38% · あと3日']);
   assert.deepEqual(render(clean(), 'accessoryInline', 'colab').labels, ['Colab 143 CU · 71%']);
   const rect = render(clean(), 'accessoryRectangular');
-  for (const t of ['Claude','Codex','AG','Colab','5h','週','72%','38%','71%','143 CU']) assert.ok(rect.labels.includes(t), t);
+  for (const t of ['Claude','Codex','AG','Colab','5h','週','残り%','72','38','25','81','143 CU']) assert.ok(rect.labels.includes(t), t);
   const noFive = clean(); noFive.records[1].fiveHour = null;
   assert.ok(!render(noFive, 'accessoryRectangular').labels.includes('—'));
-  const circle = render(clean(), 'accessoryCircular', 'codex');
-  assert.equal(circle.w.addAccessoryWidgetBackground, true);
-  assert.deepEqual(circle.labels, ['Codex', '25', '%', '5h']);
-  assert.deepEqual(render(clean(), 'accessoryCircular', 'colab').labels, ['Colab', '143', 'CU']);
-  assert.deepEqual(render(clean(), 'accessoryCircular').labels.slice(0, 2), ['Claude', '38']);
+  // Circular: rings drawn as one image. Without a parameter it follows the most constrained service.
+  const dial = (snapshot, parameter = '') => {
+    const r = render(snapshot, 'accessoryCircular', parameter);
+    const ops = r.elements.find(e => e.image).image.ops;
+    return { w: r.w, texts: ops.filter(o => o.kind === 'text').map(o => o.text),
+      tracks: ops.filter(o => o.kind === 'arc' && o.alpha < 1).length, fills: ops.filter(o => o.kind === 'arc' && o.alpha === 1).length, ops };
+  };
+  const auto = dial(clean());
+  assert.equal(auto.w.addAccessoryWidgetBackground, true);
+  assert.deepEqual(auto.texts, ['Codex', '25', '5h']);       // demo Codex 5h (25%) is lowest
+  assert.equal(auto.tracks, 2); assert.equal(auto.fills, 2);  // outer 5時間, inner 週間
+  assert.deepEqual(dial(clean(), 'claude').texts, ['Claude', '38', '週']);
+  const weeklyOnly = clean(); weeklyOnly.records[1].fiveHour = null;
+  const single = dial(weeklyOnly, 'codex');
+  assert.equal(single.tracks, 1);
+  assert.deepEqual(single.texts, ['Codex', '81', '週']);
+  assert.deepEqual(dial(clean(), 'colab').texts, ['Colab', '143', 'CU']);
+  for (const o of auto.ops) if (o.kind === 'text') assert.equal(o.hex, 'ffffff');
   // Lock Screen colors are plain white with opacity, so iOS can tint them to the wallpaper.
   for (const e of elements) if (e.textColor) assert.equal(e.textColor.hex, 'ffffff');
   assert.equal(api.widgetOptions('demo colab').demo, true);
