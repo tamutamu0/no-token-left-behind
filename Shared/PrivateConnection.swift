@@ -13,6 +13,9 @@ enum PrivateTLS {
             tls_ciphersuite_t(rawValue: TLS_PSK_WITH_AES_128_GCM_SHA256)!)
         sec_protocol_options_set_min_tls_protocol_version(tls.securityProtocolOptions, .TLSv12)
         sec_protocol_options_set_max_tls_protocol_version(tls.securityProtocolOptions, .TLSv12)
+        // Every connection proves the key with a full handshake: a cached session must never stand in for it.
+        sec_protocol_options_set_tls_resumption_enabled(tls.securityProtocolOptions, false)
+        sec_protocol_options_set_tls_tickets_enabled(tls.securityProtocolOptions, false)
         let parameters = NWParameters(tls: tls, tcp: NWProtocolTCP.Options())
         // No trust-bypass callback and no plaintext fallback.
         return parameters
