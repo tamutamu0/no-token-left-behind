@@ -1,0 +1,1306 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "%@ usage": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の残量"
+          }
+        }
+      }
+    },
+    "%lld percent left, %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り%lldパーセント、%@"
+          }
+        }
+      }
+    },
+    "5-hour": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5時間"
+          }
+        }
+      }
+    },
+    "5-hour % left": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5時間の残り %"
+          }
+        }
+      }
+    },
+    "AI Usage": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI残量"
+          }
+        }
+      }
+    },
+    "AI Usage · DEMO": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI残量 · DEMO"
+          }
+        }
+      }
+    },
+    "Add it to your Home Screen": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホーム画面に1枚追加"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外観"
+          }
+        }
+      }
+    },
+    "Auto": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動"
+          }
+        }
+      }
+    },
+    "Awaiting refresh after reset": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回復後の再取得待ち"
+          }
+        }
+      }
+    },
+    "Away from home, keep the Mac and iPhone on your private network (e.g. Tailscale). The Mac must be awake with the Mac app running.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外出先ではMacとiPhoneを同じ非公開ネットワーク（例: Tailscale）に接続してください。Macの起動とMacアプリの常駐が必要です。"
+          }
+        }
+      }
+    },
+    "CLI via CodexBar": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CodexBar経由のCLI"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "Can’t reach the Mac. Check that it is awake and on the same private network (e.g. Tailscale).": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macに接続できません。Macの起動状態とTailscaleを確認してください。"
+          }
+        }
+      }
+    },
+    "Can’t save. Check the signing and App Group settings.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存できません。署名とApp Groupの設定を確認してください。"
+          }
+        }
+      }
+    },
+    "Can’t start listening. Check the IP address and your private network (e.g. Tailscale).": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続を開始できません。IPとTailscaleを確認してください。"
+          }
+        }
+      }
+    },
+    "Check the Scriptable iCloud folder or the existing export location. No settings were changed.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ScriptableのiCloudフォルダか既存の出力先を確認してください。設定は変更していません。"
+          }
+        }
+      }
+    },
+    "Check the connection details. A private IP address and a 32-byte key are required.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続情報を確認してください。非公開IPと32バイトの接続キーが必要です。"
+          }
+        }
+      }
+    },
+    "Check the numbers and that reset times are in the future.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数値と未来の回復時刻を確認してください。"
+          }
+        }
+      }
+    },
+    "Checks Codex, Claude, Antigravity and Colab every 10 minutes. Each needs its official CLI signed in.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex・Claude・Antigravity・Colabを10分ごとに照会します。各サービスの公式CLIへのログインが必要です。"
+          }
+        }
+      }
+    },
+    "Choose Scriptable folder": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scriptableフォルダを選ぶ"
+          }
+        }
+      }
+    },
+    "Choose the Scriptable folder in iCloud Drive. Only usage numbers, reset times and sources are saved to ai-usage-snapshot-v2.json — never sign-in details.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive内のScriptableフォルダを選んでください。残量・回復時刻・取得元だけをai-usage-snapshot-v2.jsonへ保存します。ログイン情報は含みません。"
+          }
+        }
+      }
+    },
+    "Claude, Codex and Antigravity 5-hour and weekly limits, plus Colab compute units, in one widget.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude・Codex・Antigravityの5時間と週間枠、Colabの残り計算ユニットを1枚に。"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        }
+      }
+    },
+    "Collecting and syncing every 10 minutes in the background.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックグラウンドで10分ごとに照会・同期します。"
+          }
+        }
+      }
+    },
+    "Collection": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残量の取得"
+          }
+        }
+      }
+    },
+    "Collection failed. Keeping the last values.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残量の照会に失敗しました。前回の値を保持しています。"
+          }
+        }
+      }
+    },
+    "Compute units left": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残りの計算ユニット"
+          }
+        }
+      }
+    },
+    "Compute units left (CU)": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残りの計算ユニット（CU）"
+          }
+        }
+      }
+    },
+    "Connect to Mac": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macと接続"
+          }
+        }
+      }
+    },
+    "Connect to your Mac to show usage": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macと接続して残量を表示"
+          }
+        }
+      }
+    },
+    "Connection details shown on the Mac": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macに表示された接続情報"
+          }
+        }
+      }
+    },
+    "Connection key": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続キー"
+          }
+        }
+      }
+    },
+    "Connection settings": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続設定"
+          }
+        }
+      }
+    },
+    "Couldn’t export to iCloud. Check the chosen folder and iCloud Drive.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud出力に失敗しました。選択したフォルダとiCloud Driveの状態を確認してください。"
+          }
+        }
+      }
+    },
+    "Couldn’t export to iCloud. Check the folder and its access permission.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud出力に失敗しました。同期先とアクセス許可を確認してください。"
+          }
+        }
+      }
+    },
+    "Couldn’t load the preview.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューを読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "Couldn’t read the connection file.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続ファイルを読み込めません。"
+          }
+        }
+      }
+    },
+    "Couldn’t save access to the chosen folder.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選んだフォルダのアクセス許可を保存できませんでした。"
+          }
+        }
+      }
+    },
+    "Couldn’t save the connection file.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続ファイルを保存できません。"
+          }
+        }
+      }
+    },
+    "DEMO · sample values": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMO · 架空の値"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダーク"
+          }
+        }
+      }
+    },
+    "Demo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デモ"
+          }
+        }
+      }
+    },
+    "Direct connection · native iPhone app": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接接続 · ネイティブiPhoneアプリ版"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続を解除"
+          }
+        }
+      }
+    },
+    "Each Google quota is counted separately": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Googleの各枠は別の残量です"
+          }
+        }
+      }
+    },
+    "Each Google quota is counted separately. Antigravity and Colab update once their official CLIs are set up on the Mac.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Googleの各枠は別の残量です。AntigravityとColabはMacで公式CLIを設定すると更新されます。"
+          }
+        }
+      }
+    },
+    "Each row shows when it was observed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残量の観測時刻は各行に表示"
+          }
+        }
+      }
+    },
+    "Each service keeps its own observation time": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各サービスの取得時刻を保持"
+          }
+        }
+      }
+    },
+    "Enter %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を入力"
+          }
+        }
+      }
+    },
+    "Enter the values shown by the service. Leave a field blank if unknown.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式画面の表示値を入力します。空欄は未取得として扱います。"
+          }
+        }
+      }
+    },
+    "Exporting to: %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出力先: %@"
+          }
+        }
+      }
+    },
+    "Fetches usage numbers from your own Mac.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分のMacから残量だけを取得します。"
+          }
+        }
+      }
+    },
+    "I know the 5-hour reset time": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5時間の回復時刻が分かる"
+          }
+        }
+      }
+    },
+    "I know the weekly reset time": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週間の回復時刻が分かる"
+          }
+        }
+      }
+    },
+    "Import the Mac’s connection file": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macの接続ファイルを読み込む"
+          }
+        }
+      }
+    },
+    "Just the numbers, on your own iPhone.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残量だけを、自分のiPhoneへ。"
+          }
+        }
+      }
+    },
+    "Large": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大"
+          }
+        }
+      }
+    },
+    "Leave demo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デモを終了"
+          }
+        }
+      }
+    },
+    "Leave demo mode before collecting.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デモを終了してから取得してください。"
+          }
+        }
+      }
+    },
+    "Left": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り"
+          }
+        }
+      }
+    },
+    "Left / resets in": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り / 回復まで"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライト"
+          }
+        }
+      }
+    },
+    "Mac offline · last values": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac未接続 · 前回の値"
+          }
+        }
+      }
+    },
+    "Mac’s private IP (e.g. Tailscale 100.x.x.x)": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macの非公開IP（例: Tailscaleの100.x.x.x）"
+          }
+        }
+      }
+    },
+    "Manual": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手動"
+          }
+        }
+      }
+    },
+    "Manual entry": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手動入力"
+          }
+        }
+      }
+    },
+    "Manual · %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手動 · %@"
+          }
+        }
+      }
+    },
+    "Medium": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中"
+          }
+        }
+      }
+    },
+    "Needs sign-in or a source: %@. Keeping the last values.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン・取得元の確認待ち: %@。前回の値を保持しています。"
+          }
+        }
+      }
+    },
+    "No data": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未取得"
+          }
+        }
+      }
+    },
+    "No data / not in plan": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未取得 / 対象外"
+          }
+        }
+      }
+    },
+    "No paid Apple Developer account needed. Only usage numbers are written to iCloud Drive on the same Apple Account, where the Scriptable widget reads them. Collection, iCloud sync and widget refresh each add some delay.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有料Apple Developer登録なしで使う経路です。同じApple AccountのiCloud Driveへ残量だけを出力し、iPhoneのScriptableウィジェットが読みます。Macの取得とiCloud同期、iOSの更新には遅延があります。"
+          }
+        }
+      }
+    },
+    "Not set": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未設定"
+          }
+        }
+      }
+    },
+    "Official Antigravity CLI": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式Antigravity CLI"
+          }
+        }
+      }
+    },
+    "Official Claude CLI": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式Claude CLI"
+          }
+        }
+      }
+    },
+    "Official Codex CLI": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式Codex CLI"
+          }
+        }
+      }
+    },
+    "Official Colab CLI": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式Colab CLI"
+          }
+        }
+      }
+    },
+    "Official status line": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公式ステータスライン"
+          }
+        }
+      }
+    },
+    "Only ai-usage-snapshot-v2.json is updated. Other files are left alone.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ai-usage-snapshot-v2.jsonだけを更新します。他のファイルは変更しません。"
+          }
+        }
+      }
+    },
+    "Pair and sync": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録して同期"
+          }
+        }
+      }
+    },
+    "Pair with your Mac first.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Macの接続情報を登録してください。"
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート"
+          }
+        }
+      }
+    },
+    "Preview only. These are not your real numbers.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示確認用。実際の残量ではありません"
+          }
+        }
+      }
+    },
+    "Preview with sample data": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "架空データで表示を確認"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "Refresh AI usage": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI残量を更新"
+          }
+        }
+      }
+    },
+    "Refresh now": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今すぐ更新"
+          }
+        }
+      }
+    },
+    "Refresh usage": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残量を更新"
+          }
+        }
+      }
+    },
+    "Refreshing": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新中"
+          }
+        }
+      }
+    },
+    "Replace": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "置き換える"
+          }
+        }
+      }
+    },
+    "Replace the existing usage file?": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既存の残量ファイルを置き換えますか？"
+          }
+        }
+      }
+    },
+    "Reset time unknown": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回復時刻は不明"
+          }
+        }
+      }
+    },
+    "Resets": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回復"
+          }
+        }
+      }
+    },
+    "Revoke key": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーを無効化"
+          }
+        }
+      }
+    },
+    "Sample data": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サンプル表示"
+          }
+        }
+      }
+    },
+    "Sample values for preview": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "架空の値 · 表示確認用"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "Save connection file": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続ファイルを保存"
+          }
+        }
+      }
+    },
+    "Saved the connection file. AirDrop it to your iPhone.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続ファイルを保存しました。AirDropでiPhoneへ渡してください。"
+          }
+        }
+      }
+    },
+    "Size": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サイズ"
+          }
+        }
+      }
+    },
+    "Small": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小"
+          }
+        }
+      }
+    },
+    "Start collecting": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得を開始"
+          }
+        }
+      }
+    },
+    "Start collecting to update Codex, Claude, Antigravity and Colab.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得を開始すると、Codex・Claude・Antigravity・Colabの残量を更新します。"
+          }
+        }
+      }
+    },
+    "Start connection": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続を開始"
+          }
+        }
+      }
+    },
+    "Start the connection first.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先に接続を開始してください。"
+          }
+        }
+      }
+    },
+    "Stop collecting": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動取得を停止"
+          }
+        }
+      }
+    },
+    "Stop connection": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続を停止"
+          }
+        }
+      }
+    },
+    "Stop export": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出力を停止"
+          }
+        }
+      }
+    },
+    "Stopped exporting to iCloud. The saved usage file is kept.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloudへの出力を停止しました。保存済みの残量ファイルは保持します。"
+          }
+        }
+      }
+    },
+    "Text width and spacing vary slightly with the iPhone model.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneの画面サイズにより、文字幅や余白は少し異なります。"
+          }
+        }
+      }
+    },
+    "The collector script is missing.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得スクリプトが見つかりません。"
+          }
+        }
+      }
+    },
+    "The connection key was revoked. A new key is created when you reconnect.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続キーを無効にしました。再接続時に新しいキーを作ります。"
+          }
+        }
+      }
+    },
+    "The connection timed out. Showing the last values.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続がタイムアウトしました。前回の値を表示しています。"
+          }
+        }
+      }
+    },
+    "The usage data could not be verified.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得した残量データを確認できません。"
+          }
+        }
+      }
+    },
+    "This Mac’s private IP (e.g. Tailscale 100.x.x.x)": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このMacの非公開IP（例: Tailscaleの100.x.x.x）"
+          }
+        }
+      }
+    },
+    "This file contains this Mac’s connection key. AirDrop it to your own iPhone and delete it after pairing.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルはMac専用の接続キーを含みます。AirDropで自分のiPhoneへ渡し、登録後に削除してください。"
+          }
+        }
+      }
+    },
+    "To use it away from home, keep both devices on your private network (e.g. Tailscale). The Mac must be awake with this app running. Only the private IP you enter is used.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外出先でも使うには、両端末を同じ非公開ネットワーク（例: Tailscale）に接続してください。Macの起動とこのアプリの常駐が必要です。接続先は指定した非公開IPのみです。"
+          }
+        }
+      }
+    },
+    "Touch and hold the Home Screen → Edit → Add Widget → “AI Usage”. Medium and Large show every service together.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホーム画面を長押し → 編集 → ウィジェットを追加 →「AI残量」。中サイズ・大サイズで全サービスをまとめて見られます。"
+          }
+        }
+      }
+    },
+    "Up to date. Checking every 10 minutes.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得済み。10分ごとに照会しています。"
+          }
+        }
+      }
+    },
+    "Waiting for connections": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続待機中"
+          }
+        }
+      }
+    },
+    "Weekly": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週間"
+          }
+        }
+      }
+    },
+    "Weekly % left": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週間の残り %"
+          }
+        }
+      }
+    },
+    "Widget": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウィジェット"
+          }
+        }
+      }
+    },
+    "Write access to iCloud is needed. Choose the folder again with “Choose Scriptable folder”.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloudへの書き込み許可が必要です。「Scriptableフォルダを選ぶ」から同期先を選び直してください。"
+          }
+        }
+      }
+    },
+    "You never enter passwords or cookies for any AI service. The key only works with your own Mac and is stored in the iPhone’s Keychain. Send the connection file by AirDrop and delete it after pairing.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各AIのパスワードやCookieは入力しません。接続キーは自分のMac専用で、iPhoneのKeychainに保存します。接続ファイルはAirDropで渡し、登録後に削除してください。"
+          }
+        }
+      }
+    },
+    "Your AI limits, at a glance.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使えるAIを、ひと目で。"
+          }
+        }
+      }
+    },
+    "iCloud sync · Scriptable": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud同期 · Scriptable版"
+          }
+        }
+      }
+    },
+    "in %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あと%@"
+          }
+        }
+      }
+    },
+    "just now": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "たった今"
+          }
+        }
+      }
+    }
+  }
+}

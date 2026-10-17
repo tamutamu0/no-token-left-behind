@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Python & widget tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Python collectors
+        run: python3 -m unittest discover -s Tests -p 'test_*.py'
+      - name: Scriptable widget and preview
+        run: node --test Tests/*.test.cjs
+
+  apple:
+    name: Swift tests & app builds
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift core
+        run: swift test
+      - name: Mac app
+        run: xcodebuild -project AIUsage.xcodeproj -scheme AIUsageMac -derivedDataPath build-mac CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=NO build -quiet
+      - name: iOS app (simulator)
+        run: xcodebuild -project AIUsage.xcodeproj -scheme AIUsage -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO build -quiet

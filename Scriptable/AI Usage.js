@@ -1,11 +1,71 @@
-// Usage — 自作Scriptableウィジェット。通信API・ログイン情報は使用しません。
-// iCloud Drive > Scriptable > ai-usage-snapshot-v2.json をMacアプリから更新。
-// 中/大サイズ。ウィジェットのParameterが「demo」のときだけ架空データ。
+// AI Usage — Scriptable widget for Claude / Codex / Antigravity limits and Google Colab compute units.
+// Reads iCloud Drive › Scriptable › ai-usage-snapshot-v2.json written by the Mac app.
+// No network APIs and no credentials: the script only reads that file.
+// Widget parameter (space separated): demo · claude|codex|antigravity|colab · grant=<day> · lang=en|ja|zh|ko
 
-const SERVICE_IDS = ["claude", "codex", "antigravity", "colab", "googleCredits"];
-const SOURCES = ["claudeStatusline", "claudeCli", "codexAppServer", "antigravityStatusline", "antigravityCli", "codexBar", "colabCli", "browserPage", "manual", "demo"];
+const SERVICE_IDS = ["claude", "codex", "antigravity", "colab"];
+const SOURCES = ["claudeStatusline", "claudeCli", "codexAppServer", "antigravityStatusline", "antigravityCli", "codexBar", "colabCli", "manual", "demo"];
 const SNAPSHOT_FILE = "ai-usage-snapshot-v2.json";
 const MAX_KB = 16;
+
+// ---------------------------------------------------------------------------
+// Languages. The device language picks one of these; anything else falls back to English.
+const I18N = {
+  en: {
+    left: "Left", leftPct: "Left %", fiveHour: "5-hour", weekly: "Weekly", fiveShort: "5h", weekShort: "wk",
+    in: "in {d}", ago: "{d} ago", now: "now", manual: "Manual", noData: "No data",
+    awaitingRefresh: "Awaiting refresh", resetUnknown: "Reset time unknown", syncPending: "Sync pending",
+    computeUnits: "Compute units", used: "Used {v} CU", grantIn: "Next grant in {n} days",
+    grantTomorrow: "Next grant tomorrow", grantWaiting: "Grant pending (due {d})", grantShort: "{n}d",
+    grantShortWaiting: "Pending", inlineGrant: "grant in {n}d", inlineWaiting: "grant pending",
+    units: { d: "d", h: "h", m: "m", sep: " " }, unitsShort: { d: "d", h: "h", m: "m", sep: "" }
+  },
+  ja: {
+    left: "残り", leftPct: "残り%", fiveHour: "5時間", weekly: "週間", fiveShort: "5h", weekShort: "週",
+    in: "あと{d}", ago: "{d}前", now: "今", manual: "手動", noData: "未取得",
+    awaitingRefresh: "再取得待ち", resetUnknown: "回復時刻不明", syncPending: "同期保留",
+    computeUnits: "計算ユニット", used: "消費 {v} CU", grantIn: "次の付与まで あと{n}日",
+    grantTomorrow: "次の付与 明日", grantWaiting: "付与待ち（予定{d}日）", grantShort: "あと{n}日",
+    grantShortWaiting: "付与待ち", inlineGrant: "付与まで{n}日", inlineWaiting: "付与待ち",
+    units: { d: "日", h: "時間", m: "分", sep: "" }, unitsShort: { d: "日", h: "h", m: "m", sep: "", only: "分" }
+  },
+  zh: {
+    left: "剩余", leftPct: "剩余%", fiveHour: "5小时", weekly: "每周", fiveShort: "5h", weekShort: "周",
+    in: "还剩{d}", ago: "{d}前", now: "刚刚", manual: "手动", noData: "无数据",
+    awaitingRefresh: "等待刷新", resetUnknown: "重置时间未知", syncPending: "同步待定",
+    computeUnits: "计算单元", used: "已用 {v} CU", grantIn: "距下次发放 {n} 天",
+    grantTomorrow: "明天发放", grantWaiting: "等待发放（预计{d}日）", grantShort: "{n}天",
+    grantShortWaiting: "待发放", inlineGrant: "{n}天后发放", inlineWaiting: "待发放",
+    units: { d: "天", h: "小时", m: "分钟", sep: "" }, unitsShort: { d: "天", h: "h", m: "m", sep: "", only: "分钟" }
+  },
+  ko: {
+    left: "남음", leftPct: "남음%", fiveHour: "5시간", weekly: "주간", fiveShort: "5h", weekShort: "주",
+    in: "{d} 후", ago: "{d} 전", now: "방금", manual: "수동", noData: "데이터 없음",
+    awaitingRefresh: "새로고침 대기", resetUnknown: "재설정 시간 알 수 없음", syncPending: "동기화 대기",
+    computeUnits: "컴퓨팅 단위", used: "{v} CU 사용", grantIn: "다음 지급까지 {n}일",
+    grantTomorrow: "내일 지급", grantWaiting: "지급 대기 ({d}일 예정)", grantShort: "{n}일",
+    grantShortWaiting: "지급 대기", inlineGrant: "{n}일 후 지급", inlineWaiting: "지급 대기",
+    units: { d: "일", h: "시간", m: "분", sep: " " }, unitsShort: { d: "일", h: "h", m: "m", sep: "", only: "분" }
+  }
+};
+let LANG = "en";
+function resolveLanguage(preferred) {
+  const code = String(preferred || "en").toLowerCase();
+  return code.startsWith("ja") ? "ja" : code.startsWith("zh") ? "zh" : code.startsWith("ko") ? "ko" : "en";
+}
+function setLanguage(preferred) { LANG = resolveLanguage(preferred); return LANG; }
+function t(key, vars = {}) {
+  const value = I18N[LANG][key] != null ? I18N[LANG][key] : I18N.en[key];
+  return typeof value === "string" ? value.replace(/\{(\w+)\}/g, (_, k) => vars[k]) : value;
+}
+// 125 minutes → "2h 5m" (en) / "2時間5分" (ja); short form for tight cells → "2h5m".
+function duration(minutes, short) {
+  const u = t(short ? "unitsShort" : "units");
+  const d = Math.floor(minutes / 1440), h = Math.floor(minutes % 1440 / 60), m = minutes % 60;
+  if (d) return `${d}${u.d}${h ? `${u.sep}${h}${u.h}` : ""}`;
+  if (h) return `${h}${u.h}${m ? `${u.sep}${m}${u.m}` : ""}`;
+  return `${m}${u.only || u.m}`;
+}
 
 function normalizeSnapshot(raw, now = Date.now() / 1000) {
   const invalid = () => { throw new Error("Invalid snapshot"); };
@@ -18,16 +78,17 @@ function normalizeSnapshot(raw, now = Date.now() / 1000) {
   };
   if (!raw || raw.version !== 1 || typeof raw.isDemo !== "boolean" ||
       !number(raw.generatedAt, -Number.MAX_VALUE, now + 60) ||
-      !Array.isArray(raw.records) || raw.records.length > 5) return invalid();
+      !Array.isArray(raw.records) || raw.records.length > 8) return invalid();
   const seen = new Set();
-  const records = raw.records.map(r => {
-    if (!r || !SERVICE_IDS.includes(r.service) || seen.has(r.service) ||
+  // Records for services this script does not know (older or newer Mac apps) are skipped, not fatal.
+  const records = raw.records.filter(r => r && SERVICE_IDS.includes(r.service)).map(r => {
+    if (seen.has(r.service) ||
         !SOURCES.includes(r.source) || (r.source === "demo") !== raw.isDemo) return invalid();
     seen.add(r.service);
     if (r.observedAt != null && !number(r.observedAt, -Number.MAX_VALUE, now + 60)) return invalid();
     const fiveHour = window(r.fiveHour), weekly = window(r.weekly);
     const balance = r.balance == null ? null : r.balance;
-    const isBalance = r.service === "colab" || r.service === "googleCredits";
+    const isBalance = r.service === "colab";
     if (balance != null && !number(balance, 0, 1e9)) return invalid();
     if ((isBalance && (fiveHour || weekly)) || (!isBalance && balance != null)) return invalid();
     if ((fiveHour || weekly || balance != null) && r.observedAt == null) return invalid();
@@ -61,8 +122,7 @@ function demoSnapshot(now = Date.now() / 1000) {
     { service: "claude", source: "demo", observedAt: now, fiveHour: q(28,7200), weekly: q(62,259200) },
     { service: "codex", source: "demo", observedAt: now, fiveHour: q(75,3600), weekly: q(19,432000) },
     { service: "antigravity", source: "demo", observedAt: now, fiveHour: q(10,14400), weekly: q(36,345600) },
-    { service: "colab", source: "demo", observedAt: now, balance: 142.5, balanceAllocation: { total: 200, basis: "demo" } },
-    { service: "googleCredits", source: "demo", observedAt: now, balance: 320 }
+    { service: "colab", source: "demo", observedAt: now, balance: 142.5, balanceAllocation: { total: 200, basis: "demo" } }
   ] };
 }
 function remaining(window, now) {
@@ -70,25 +130,21 @@ function remaining(window, now) {
   return 100 - window.usedPercent;
 }
 function age(record, now) {
-  if (record.observedAt == null) return "未取得";
+  if (record.observedAt == null) return t("noData");
   const minutes = Math.max(0, Math.floor((now - record.observedAt) / 60));
-  const time = minutes === 0 ? "今" : minutes < 60 ? `${minutes}分前` :
-    minutes < 1440 ? `${Math.floor(minutes / 60)}時間前` : `${Math.floor(minutes / 1440)}日前`;
-  return record.source === "manual" ? `手動 ${time}` : time;
+  const coarse = minutes < 60 ? minutes : minutes < 1440 ? Math.floor(minutes / 60) * 60 : Math.floor(minutes / 1440) * 1440;
+  const time = minutes === 0 ? t("now") : t("ago", { d: duration(coarse, false) });
+  return record.source === "manual" ? `${t("manual")} ${time}` : time;
 }
 function resetLabel(window, now) {
-  if (!window) return "未取得";
-  if (window.resetsAt == null) return "回復時刻不明";
-  if (window.resetsAt <= now) return "再取得待ち";
-  const m = Math.ceil((window.resetsAt - now) / 60);
-  if (m < 60) return `あと${m}分`;
-  if (m < 1440) return `あと${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ""}`;
-  const h = Math.floor(m % 1440 / 60);
-  return `あと${Math.floor(m / 1440)}日${h ? `${h}時間` : ""}`;
+  if (!window) return t("noData");
+  if (window.resetsAt == null) return t("resetUnknown");
+  if (window.resetsAt <= now) return t("awaitingRefresh");
+  return t("in", { d: duration(Math.ceil((window.resetsAt - now) / 60), false) });
 }
 
 async function loadSnapshot(useDemo) {
-  if (useDemo) return { snapshot: normalizeSnapshot(demoSnapshot()), status: "DEMO · 架空の値" };
+  if (useDemo) return { snapshot: normalizeSnapshot(demoSnapshot()), status: "demo" };
   const local = FileManager.local();
   const cache = local.joinPath(local.libraryDirectory(), "ai-usage-cache-v1.json");
   let snapshot = emptySnapshot();
@@ -102,20 +158,20 @@ async function loadSnapshot(useDemo) {
     const cloud = FileManager.iCloud();
     let path = cloud.joinPath(cloud.documentsDirectory(), SNAPSHOT_FILE);
     if (!cloud.fileExists(path)) path = cloud.joinPath(cloud.documentsDirectory(), "ai-usage-snapshot.json");
-    if (!cloud.fileExists(path)) return { snapshot, status: "Macの出力待ち" };
+    if (!cloud.fileExists(path)) return { snapshot, status: "waitingForMac" };
     await cloud.downloadFileFromiCloud(path);
     const kb = cloud.fileSize(path);
     if (typeof kb !== "number" || kb > MAX_KB) throw new Error("Size");
     const next = normalizeSnapshot(JSON.parse(cloud.readString(path)));
-    if (next.isDemo) return { snapshot: next, status: "DEMO · 架空の値" };
+    if (next.isDemo) return { snapshot: next, status: "demo" };
     // Do not replace a newer offline cache with an older iCloud version.
     if (next.generatedAt < snapshot.generatedAt && snapshot.records.length > 0)
-      return { snapshot, status: "iCloud更新待ち · 前回の値" };
+      return { snapshot, status: "cachedNewer" };
     snapshot = next;
     local.writeString(cache, JSON.stringify(next));
-    return { snapshot, status: "iCloud · 取得時刻は各行" };
+    return { snapshot, status: "live" };
   } catch (_) {
-    return { snapshot, status: "同期待ち · 前回の値" };
+    return { snapshot, status: "syncFailed" };
   }
 }
 
@@ -160,18 +216,14 @@ function compactAge(record, now) {
   const minutes = Math.max(0, Math.floor((now - record.observedAt) / 60));
   const isStale = now - record.observedAt > 900;
   const elapsed = minutes < 60 ? `${minutes}m` : minutes < 1440 ? `${Math.floor(minutes / 60)}h` : `${Math.floor(minutes / 1440)}d`;
-  return record.source === "manual" ? isStale ? `手動 ${elapsed}` : "手動" : isStale ? elapsed : "";
+  return record.source === "manual" ? isStale ? `${t("manual")} ${elapsed}` : t("manual") : isStale ? elapsed : "";
 }
 
-// Short "あと" for the one-line medium cell: あと10分 / あと4h59m / あと4日3h.
+// Short reset label for the one-line medium cell: "in 4h59m" / "あと4h59m".
 function shortResetLabel(window, now) {
   if (!window || window.resetsAt == null) return "";
-  if (window.resetsAt <= now) return "再取得待ち";
-  const m = Math.ceil((window.resetsAt - now) / 60);
-  if (m < 60) return `あと${m}分`;
-  if (m < 1440) return `あと${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}`;
-  const h = Math.floor(m % 1440 / 60);
-  return `あと${Math.floor(m / 1440)}日${h ? `${h}h` : ""}`;
+  if (window.resetsAt <= now) return t("awaitingRefresh");
+  return t("in", { d: duration(Math.ceil((window.resetsAt - now) / 60), true) });
 }
 
 // Colab grants arrive monthly on the Google AI plan's renewal day, which no official API returns.
@@ -199,13 +251,13 @@ function grantStatus(record, configuredDay, now) {
 }
 function grantLabel(status, now) {
   if (!status) return "";
-  if (status.waiting) return `付与待ち（予定${status.day}日）`;
+  if (status.waiting) return t("grantWaiting", { d: status.day });
   const days = Math.ceil((status.nextAt - now) / 86400);
-  return days <= 1 ? "次の付与 明日" : `次の付与まで あと${days}日`;
+  return days <= 1 ? t("grantTomorrow") : t("grantIn", { n: days });
 }
 function grantShort(status, now) {
   if (!status) return "";
-  return status.waiting ? "付与待ち" : `あと${Math.max(1, Math.ceil((status.nextAt - now) / 86400))}日`;
+  return status.waiting ? t("grantShortWaiting") : t("grantShort", { n: Math.max(1, Math.ceil((status.nextAt - now) / 86400)) });
 }
 
 function cuText(value, digits) {
@@ -220,14 +272,15 @@ const SHORT_NAMES = { claude: "Claude", codex: "Codex", antigravity: "AG", colab
 
 function widgetOptions(parameter) {
   const tokens = String(parameter || "").toLowerCase().split(/[\s,]+/).filter(Boolean);
-  const grant = tokens.map(t => /^grant=(\d{1,2})$/.exec(t)).find(Boolean);
-  return { demo: tokens.includes("demo"), service: tokens.find(t => SERVICE_NAMES[t]) || null,
-    grantDay: grant ? Number(grant[1]) : null };
+  const grant = tokens.map(x => /^grant=(\d{1,2})$/.exec(x)).find(Boolean);
+  const lang = tokens.map(x => /^lang=([a-z-]+)$/.exec(x)).find(Boolean);
+  return { demo: tokens.includes("demo"), service: tokens.find(x => SERVICE_NAMES[x]) || null,
+    grantDay: grant ? Number(grant[1]) : null, lang: lang ? lang[1] : null };
 }
 
 // The window that runs out first for a service: the lowest remaining percentage it has.
 function tightest(record, now) {
-  const options = [["5h", record.fiveHour], ["週", record.weekly]]
+  const options = [[t("fiveShort"), record.fiveHour], [t("weekShort"), record.weekly]]
     .map(([label, win]) => ({ label, win, value: remaining(win, now) }))
     .filter(o => o.value != null);
   return options.sort((a, b) => a.value - b.value)[0] || null;
@@ -318,7 +371,7 @@ function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, gr
       .sort((a, b) => a.t.value - b.t.value)[0];
     if (option.service === "colab") {
       const g = grantStatus(colab, grantDay, now);
-      const tail = g ? ` · ${g.waiting ? "付与待ち" : `付与まで${Math.ceil((g.nextAt - now) / 86400)}日`}` : colabPercent != null ? ` · ${Math.round(colabPercent)}%` : "";
+      const tail = g ? ` · ${g.waiting ? t("inlineWaiting") : t("inlineGrant", { n: Math.ceil((g.nextAt - now) / 86400) })}` : colabPercent != null ? ` · ${Math.round(colabPercent)}%` : "";
       text(w, colab.balance != null ? `Colab ${cuText(colab.balance, 0)} CU${tail}` : "Colab —");
     } else if (pick) {
       const after = shortResetLabel(pick.t.win, now);
@@ -328,7 +381,7 @@ function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, gr
   }
 
   if (family === "accessoryCircular") {
-    // Activity-style rings drawn as one image: outer = 5時間, inner = 週間, centre = the lower %.
+    // Activity-style rings drawn as one image: outer = 5-hour, inner = weekly, centre = the lower %.
     // Without a parameter it follows whichever service is closest to running out.
     w.addAccessoryWidgetBackground = true;
     w.setPadding(0, 0, 0, 0);
@@ -360,9 +413,9 @@ function buildAccessory(snapshot, family, parameter, now = Date.now() / 1000, gr
     c.addSpacer(3); miniBar(c, value);
   };
   const hasFiveHour = quotaIDs.some(id => record(id).fiveHour != null);
-  const head = row(w); const hn = row(head); hn.size = new Size(cols.name, 0); text(hn, "残り%", 8, dim);
+  const head = row(w); const hn = row(head); hn.size = new Size(cols.name, 0); text(hn, t("leftPct"), 8, dim);
   head.addSpacer();
-  for (const [i, label] of [hasFiveHour ? "5h" : "", "週"].entries()) {
+  for (const [i, label] of [hasFiveHour ? t("fiveShort") : "", t("weekShort")].entries()) {
     if (i) head.addSpacer(cols.gap);
     const c = row(head); c.size = new Size(cols.num + 3 + cols.bar, 0); if (label) text(c, label, 8, dim); c.addSpacer();
   }
@@ -434,9 +487,9 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
     d.backgroundColor = theme.accents[id]; parent.addSpacer(6);
   };
   const services = [["claude", "Claude"], ["codex", "Codex"], ["antigravity", "Antigravity"]];
-  const hint = snapshot.isDemo ? "DEMO" : status.includes("前回の値") ? "同期保留" : "";
+  const hint = snapshot.isDemo ? "DEMO" : status === "syncFailed" || status === "cachedNewer" ? t("syncPending") : "";
 
-  // A quota cell: big remaining % with "あと" beside it (medium) or below the bar (large).
+  // A quota cell: big remaining % with the reset time beside it (medium) or below the bar (large).
   // A missing window paints nothing at all — no dash, no empty bar.
   const quotaCell = (parent, id, win, isStale) => {
     const c = column(parent, m.cell);
@@ -452,11 +505,11 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
   };
 
   if (small) {
-    // Two-tier rows so both windows fit at a readable size: the name, then 5時間 | 週間 cells.
+    // Two-tier rows so both windows fit at a readable size: the name, then 5-hour | weekly cells.
     const cellW = (m.width - m.gap) / 2;
     const hasFiveHour = services.some(([id]) => record(id).fiveHour != null);
     const head = row(w); head.size = new Size(m.width, 0);
-    for (const [i, label] of [hasFiveHour ? "5時間" : "", "週間"].entries()) {
+    for (const [i, label] of [hasFiveHour ? t("fiveHour") : "", t("weekly")].entries()) {
       if (i) head.addSpacer(m.gap);
       const c = row(head); c.size = new Size(cellW, 0);
       if (label) text(c, label, m.head, theme.secondary);
@@ -483,13 +536,13 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
     }
   } else {
     const hasFiveHour = services.some(([id]) => record(id).fiveHour != null);
-    // Header: "残り" over the names, column titles over the numbers.
+    // Header: "Left" over the names, column titles over the numbers.
     const head = row(w);
     const left = row(head); left.size = new Size(m.label, 0);
-    text(left, "残り", m.head, theme.secondary);
+    text(left, t("left"), m.head, theme.secondary);
     if (hint) { left.addSpacer(4); text(left, hint, m.head, theme.warning, "semibold"); }
     head.addSpacer();
-    for (const [i, label] of [hasFiveHour ? "5時間" : "", "週間"].entries()) {
+    for (const [i, label] of [hasFiveHour ? t("fiveHour") : "", t("weekly")].entries()) {
       if (i) head.addSpacer(m.gap);
       const c = row(head); c.size = new Size(m.cell, 0);
       if (label) text(c, label, m.head, theme.secondary);
@@ -527,7 +580,7 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
   if (!small) dot(ft, "colab");
   text(ft, "Colab", small ? m.head + 1 : m.name, small ? theme.secondary : theme.text, "semibold", 0.7);
   if (small && grant) { ft.addSpacer(4); text(ft, grantShort(grantInfo, now), m.head, grantInfo.waiting ? theme.warning : theme.secondary, "regular", 0.7); }
-  if (!small) { fl.addSpacer(1); text(fl, colabStale ? compactAge(colab, now) || age(colab, now) : "計算ユニット", m.cap - 1, colabStale ? theme.warning : theme.secondary); }
+  if (!small) { fl.addSpacer(1); text(fl, colabStale ? compactAge(colab, now) || age(colab, now) : t("computeUnits"), m.cap - 1, colabStale ? theme.warning : theme.secondary); }
   foot.addSpacer();
   const fr = small ? foot : column(foot, span);
   const amount = row(fr);
@@ -541,7 +594,7 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
   if (value != null) { fr.addSpacer(3); bar(small ? w : fr, span, value, barTone("colab", value, colabStale)); }
   if (large && (allocation || grant)) {
     fr.addSpacer(4);
-    text(fr, [allocation && `消費 ${cuText(allocation.consumed, 2)} CU`, grant].filter(Boolean).join(" · "), m.cap, theme.secondary, "regular", 0.7);
+    text(fr, [allocation && t("used", { v: cuText(allocation.consumed, 2) }), grant].filter(Boolean).join(" · "), m.cap, theme.secondary, "regular", 0.7);
   }
   return finish(w, now);
 }
@@ -553,9 +606,8 @@ function finish(w, now) {
 }
 
 // Scriptable entry point — functions above can be tested without account data.
-// Parameter: "demo" for sample values; a service name (claude/codex/antigravity/colab)
-// picks what the circular and inline Lock Screen widgets show.
 const options = widgetOptions(args.widgetParameter);
+setLanguage(options.lang || Device.language());
 const result = await loadSnapshot(options.demo);
 const family = config.widgetFamily || "medium";
 const grantDay = options.grantDay || (options.demo ? null : loadSettings().colabGrantDay) || null;

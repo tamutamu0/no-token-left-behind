@@ -78,10 +78,11 @@ function previewMarkup(node, appearance, parentDirection = 'column') {
   return `<div class="${node.type}" style="${styles.join(';')}">${node.children.map(child => previewMarkup(child, appearance, node.direction)).join('')}</div>`;
 }
 
-window.renderUsagePreview = (raw, family, appearance, now) => {
+window.renderUsagePreview = (raw, family, appearance, now, language = 'en') => {
   const preview = document.getElementById('preview');
   try {
     if (!['small', 'medium', 'large'].includes(family) || !['light', 'dark'].includes(appearance)) throw new Error('Invalid preview');
+    setLanguage(language);
     const snapshot = normalizeSnapshot(raw, now);
     preview.innerHTML = previewMarkup(buildWidget(snapshot, '', family, now), appearance);
     return { ok: true, family, appearance };

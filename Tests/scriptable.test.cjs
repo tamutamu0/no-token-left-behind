@@ -5,18 +5,21 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../Scriptable/AI Usage.js'), 'utf8');
 const context = vm.createContext({});
-vm.runInContext(source.split('// Scriptable entry point')[0] + '\nthis.api = { normalizeSnapshot, emptySnapshot, demoSnapshot, remaining, age, resetLabel, loadSnapshot, buildWidget, allocationStats, widgetOptions, nextGrantAt, grantLabel, grantStatus };', context);
+vm.runInContext(source.split('// Scriptable entry point')[0] + '\nthis.api = { setLanguage, resolveLanguage, duration, normalizeSnapshot, emptySnapshot, demoSnapshot, remaining, age, resetLabel, loadSnapshot, buildWidget, allocationStats, widgetOptions, nextGrantAt, grantLabel, grantStatus };', context);
 const api = context.api;
+api.setLanguage('ja');
 const now = 1900000000;
 const clean = () => JSON.parse(JSON.stringify(api.demoSnapshot(now)));
 
-test('official CLI credits are accepted without breaking the quota rows, zero is a real balance', () => {
+test('records for unknown or retired services are skipped instead of rejecting the file; zero is a real balance', () => {
   const input = clean(); input.isDemo = false;
   for (const r of input.records) { r.source = 'manual'; delete r.balanceAllocation; }
-  input.records[4].source = 'antigravityCli'; input.records[4].balance = 0;
+  input.records[3].balance = 0;
+  input.records.push({ service: 'googleCredits', source: 'antigravityCli', observedAt: now, balance: 320 },
+    { service: 'futureService', source: 'somethingNew', observedAt: now });
   const result = api.normalizeSnapshot(input, now);
-  assert.equal(result.records[4].balance, 0);
-  assert.equal(result.records[4].source, 'antigravityCli');
+  assert.deepEqual(result.records.map(r => r.service), ['claude', 'codex', 'antigravity', 'colab']);
+  assert.equal(result.records[3].balance, 0);
   assert.equal(api.remaining(result.records[0].fiveHour, now), 72);
 });
 
@@ -24,7 +27,7 @@ test('normalization strips unexpected credentials and private fields', () => {
   const input = clean(); input.token = 'fixture-secret'; input.records[0].email = 'fixture@example.invalid';
   const normalized = JSON.stringify(api.normalizeSnapshot(input, now));
   assert.ok(!normalized.includes('fixture'));
-  assert.equal(JSON.parse(normalized).records.length, 5);
+  assert.equal(JSON.parse(normalized).records.length, 4);
 });
 test('malformed, future, mixed, duplicate and incompatible data is rejected', () => {
   const edits = [s => s.version = 2, s => s.generatedAt = now + 61,
@@ -48,8 +51,8 @@ test('confirmed Colab allocation gives consumption and percentage while legacy b
 });
 test('allocation must be confirmed for this service and source; untrusted fields are stripped', () => {
   for (const edit of [r => r.balanceAllocation.total = 0, r => r.balanceAllocation.total = 100,
-    r => r.balanceAllocation.basis = 'planGuess', r => r.balance = null, r => r.service = 'googleCredits']) {
-    const input = clean(); input.records.pop(); edit(input.records[3]);
+    r => r.balanceAllocation.basis = 'planGuess', r => r.balance = null, r => r.service = 'claude']) {
+    const input = clean(); edit(input.records[3]);
     assert.throws(() => api.normalizeSnapshot(input, now));
   }
   const input = clean(); input.records[3].balanceAllocation.token = 'fixture-secret';
@@ -88,7 +91,7 @@ test('iCloud failure retains old observation and cloud demo cannot replace live 
   cloud.set('/cloud/ai-usage-snapshot.json', '{invalid');
   result = await api.loadSnapshot(false);
   assert.equal(result.snapshot.isDemo, false);
-  assert.equal(result.status, '同期待ち · 前回の値');
+  assert.equal(result.status, 'syncFailed');
 });
 function fakeScriptable() {
   const labels = [], elements = [];
@@ -259,6 +262,28 @@ test('lastGrantAt is accepted only on an official Colab record', () => {
     s => { s.records[0].lastGrantAt = now - 10; }]) {
     const c = JSON.parse(JSON.stringify(live)); edit(c); assert.throws(() => api.normalizeSnapshot(c, now));
   }
+});
+
+test('languages: device language picks en/ja/zh/ko, anything else falls back to English', () => {
+  assert.equal(api.resolveLanguage('ja-JP'), 'ja');
+  assert.equal(api.resolveLanguage('zh-Hans'), 'zh');
+  assert.equal(api.resolveLanguage('ko'), 'ko');
+  assert.equal(api.resolveLanguage('fr'), 'en');
+  assert.equal(api.resolveLanguage(undefined), 'en');
+  assert.equal(api.widgetOptions('colab lang=ko').lang, 'ko');
+  try {
+    api.setLanguage('en');
+    assert.equal(api.duration(125, false), '2h 5m');
+    assert.equal(api.duration(125, true), '2h5m');
+    assert.equal(api.duration(5 * 1440 + 180, false), '5d 3h');
+    assert.equal(api.resetLabel({ usedPercent: 10, resetsAt: now + 7200 }, now), 'in 2h');
+    assert.equal(api.resetLabel({ usedPercent: 10, resetsAt: now }, now), 'Awaiting refresh');
+    assert.equal(api.grantLabel(api.grantStatus(null, new Date((now + 3 * 86400) * 1000).getDate(), now), now), 'Next grant in 3 days');
+    api.setLanguage('zh'); assert.equal(api.duration(125, false), '2小时5分钟');
+    api.setLanguage('ko'); assert.equal(api.resetLabel({ usedPercent: 10, resetsAt: now + 7200 }, now), '2시간 후');
+  } finally { api.setLanguage('ja'); }
+  assert.equal(api.duration(125, false), '2時間5分');
+  assert.equal(api.duration(10, true), '10分');
 });
 
 test('new sync file takes priority and a damaged update retains the verified cache', async () => {

@@ -11,7 +11,7 @@ final class PhoneModel: ObservableObject {
 
     func refresh() async {
         guard !refreshing else { return }
-        guard let pairing = PairingStore.load() else { message = "Macの接続情報を登録してください。"; return }
+        guard let pairing = PairingStore.load() else { message = String(localized: "Pair with your Mac first."); return }
         refreshing = true; defer { refreshing = false }
         do {
             let fetched = try await SnapshotClient().fetch(pairing)
@@ -48,7 +48,7 @@ struct AIUsageApp: App {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("使えるAIを、ひと目で。").font(.system(size: 27, weight: .bold))
+                            Text("Your AI limits, at a glance.").font(.system(size: 27, weight: .bold))
                             Text("Claude · Codex · Google AI Pro").font(.subheadline).foregroundStyle(.secondary)
                         }
                         TimelineView(.periodic(from: .now, by: 60)) { context in
@@ -57,29 +57,29 @@ struct AIUsageApp: App {
                         }
                         HStack {
                             Button { Task { await model.refresh() } } label: {
-                                Label(model.refreshing ? "更新中" : "残量を更新", systemImage: "arrow.clockwise")
+                                Label(model.refreshing ? String(localized: "Refreshing") : String(localized: "Refresh usage"), systemImage: "arrow.clockwise")
                             }.buttonStyle(.borderedProminent).disabled(model.refreshing || !model.paired)
-                            Button(model.paired ? "接続設定" : "Macと接続") { showPairing = true }
+                            Button(model.paired ? String(localized: "Connection settings") : String(localized: "Connect to Mac")) { showPairing = true }
                                 .buttonStyle(.bordered)
                         }
                         if let message = model.message { Text(message).font(.footnote).foregroundStyle(.orange) }
                         VStack(alignment: .leading, spacing: 14) {
-                            Label("ホーム画面に1枚追加", systemImage: "rectangle.on.rectangle")
+                            Label("Add it to your Home Screen", systemImage: "rectangle.on.rectangle")
                                 .font(.headline)
-                            Text("ホーム画面を長押し → 編集 → ウィジェットを追加 →「AI残量」。中サイズ・大サイズで全サービスをまとめて見られます。")
+                            Text("Touch and hold the Home Screen → Edit → Add Widget → “AI Usage”. Medium and Large show every service together.")
                                 .font(.subheadline).foregroundStyle(.secondary)
                             Divider()
-                            Text("外出先ではMacとiPhoneのTailscaleを接続してください。Macの起動とMacアプリの常駐が必要です。")
+                            Text("Away from home, keep the Mac and iPhone on your private network (e.g. Tailscale). The Mac must be awake with the Mac app running.")
                                 .font(.footnote).foregroundStyle(.secondary)
-                            Text("Googleの各枠は別の残量です。Antigravityは公式CLIの設定後に更新。ColabとAIクレジットはMacで入力した値を同期します。")
+                            Text("Each Google quota is counted separately. Antigravity and Colab update once their official CLIs are set up on the Mac.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }.padding(20).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 20))
-                        Button(model.snapshot.isDemo ? "デモを終了" : "架空データで表示を確認") {
+                        Button(model.snapshot.isDemo ? String(localized: "Leave demo") : String(localized: "Preview with sample data")) {
                             model.setDemo(!model.snapshot.isDemo)
                         }.font(.footnote)
                     }.padding(22)
                 }
-                .navigationTitle("AI残量").navigationBarTitleDisplayMode(.inline)
+                .navigationTitle("AI Usage").navigationBarTitleDisplayMode(.inline)
                 .sheet(isPresented: $showPairing) {
                     PairingForm(model: model)
                 }
@@ -107,26 +107,26 @@ struct PairingForm: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Macに表示された接続情報") {
-                    TextField("MacのTailscale IP（100.x.x.x）", text: $host)
+                Section("Connection details shown on the Mac") {
+                    TextField("Mac’s private IP (e.g. Tailscale 100.x.x.x)", text: $host)
                         .keyboardType(.decimalPad).autocorrectionDisabled().textInputAutocapitalization(.never)
-                    TextField("ポート", text: $port).keyboardType(.numberPad)
-                    SecureField("接続キー", text: $key).textContentType(.oneTimeCode)
+                    TextField("Port", text: $port).keyboardType(.numberPad)
+                    SecureField("Connection key", text: $key).textContentType(.oneTimeCode)
                         .keyboardType(.asciiCapable).autocorrectionDisabled().textInputAutocapitalization(.never)
-                    Button("Macの接続ファイルを読み込む") { importing = true }
+                    Button("Import the Mac’s connection file") { importing = true }
                 }
                 Section {
-                    Text("各AIのパスワードやCookieは入力しません。接続キーは自分のMac専用で、iPhoneのKeychainに保存します。接続ファイルはAirDropで渡し、登録後に削除してください。")
+                    Text("You never enter passwords or cookies for any AI service. The key only works with your own Mac and is stored in the iPhone’s Keychain. Send the connection file by AirDrop and delete it after pairing.")
                         .font(.footnote)
                     if let error { Text(error).foregroundStyle(.orange) }
-                    Button("登録して同期") { save() }.disabled(host.isEmpty || key.isEmpty)
+                    Button("Pair and sync") { save() }.disabled(host.isEmpty || key.isEmpty)
                 }
                 if model.paired {
-                    Section { Button("接続を解除", role: .destructive) { model.disconnect(); dismiss() } }
+                    Section { Button("Disconnect", role: .destructive) { model.disconnect(); dismiss() } }
                 }
             }
-            .navigationTitle("Macと接続")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } }
+            .navigationTitle("Connect to Mac")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
                 do {
                     let url = try result.get()
@@ -136,7 +136,7 @@ struct PairingForm: View {
                     guard bytes.count < 2048 else { throw UsageError.invalidPairing }
                     let pairing = try JSONDecoder().decode(Pairing.self, from: bytes).validated()
                     host = pairing.host; port = String(pairing.port); key = pairing.key
-                } catch { self.error = "接続ファイルを読み込めません。" }
+                } catch { self.error = String(localized: "Couldn’t read the connection file.") }
             }
         }
     }

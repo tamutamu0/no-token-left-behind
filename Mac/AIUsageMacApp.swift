@@ -6,7 +6,7 @@ import Darwin
 @MainActor
 final class MacModel: ObservableObject {
     @Published var snapshot = SnapshotStore.load()
-    @Published var message = "取得を開始すると、CodexとClaudeの残量を更新します。"
+    @Published var message = String(localized: "Start collecting to update Codex, Claude, Antigravity and Colab.")
     @Published var host = ""
     @Published var connected = false
     @Published var collecting = false
@@ -66,7 +66,7 @@ final class MacModel: ObservableObject {
                 UserDefaults.standard.set(cloudFolder, forKey: "snapshotExportFolder")
                 startCollection()
             } else {
-                message = "ScriptableのiCloudフォルダか既存の出力先を確認してください。設定は変更していません。"
+                message = String(localized: "Check the Scriptable iCloud folder or the existing export location. No settings were changed.")
             }
         } else if UserDefaults.standard.bool(forKey: "collectionEnabled"), !snapshot.isDemo {
             startCollection()
@@ -76,7 +76,7 @@ final class MacModel: ObservableObject {
     }
     deinit { cloudAccessURL?.stopAccessingSecurityScopedResource() }
     func startCollection() {
-        guard !snapshot.isDemo else { message = "デモを終了してから取得してください。"; return }
+        guard !snapshot.isDemo else { message = String(localized: "Leave demo mode before collecting."); return }
         running = true
         UserDefaults.standard.set(true, forKey: "collectionEnabled")
         Task { await refresh() }
@@ -98,14 +98,14 @@ final class MacModel: ObservableObject {
         guard !collecting, !snapshot.isDemo else { return }
         if externalCollector {
             snapshot = SnapshotStore.load()
-            message = "バックグラウンドで10分ごとに照会・同期します。"
+            message = String(localized: "Collecting and syncing every 10 minutes in the background.")
             return
         }
         collecting = true; defer { collecting = false }
         recordHealth(["refreshStartedAt": Date().timeIntervalSince1970])
         importStatuslines()
         guard let script = Bundle.main.url(forResource: "collect_providers", withExtension: "py") else {
-            message = "取得スクリプトが見つかりません。"; return
+            message = String(localized: "The collector script is missing."); return
         }
         struct Collection: Decodable { let records: [UsageRecord]; let status: [String: String] }
         let result: Collection? = await Task.detached {
@@ -132,11 +132,12 @@ final class MacModel: ObservableObject {
                 if allowed { update(record) }
             }
             let pending = [ServiceID.claude, .codex, .antigravity, .colab].filter { result.status[$0.rawValue] != "ok" }
-            message = pending.isEmpty ? "取得済み。10分ごとに照会しています。"
-                : "ログイン・取得元の確認待ち: " + pending.map(\.title).joined(separator: "、") + "。前回の値を保持しています。"
+            let names = ListFormatter.localizedString(byJoining: pending.map(\.title))
+            message = pending.isEmpty ? String(localized: "Up to date. Checking every 10 minutes.")
+                : String(localized: "Needs sign-in or a source: \(names). Keeping the last values.")
         } else {
             recordHealth(["refreshFinishedAt": Date().timeIntervalSince1970, "collectionError": true])
-            message = "残量の照会に失敗しました。前回の値を保持しています。"
+            message = String(localized: "Collection failed. Keeping the last values.")
         }
     }
 
@@ -189,7 +190,7 @@ final class MacModel: ObservableObject {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true; panel.canChooseFiles = false
         panel.allowsMultipleSelection = false; panel.canCreateDirectories = false
-        panel.message = "iCloud Drive内のScriptableフォルダを選んでください。残量・回復時刻・取得元だけをai-usage-snapshot-v2.jsonへ保存します。ログイン情報は含みません。"
+        panel.message = String(localized: "Choose the Scriptable folder in iCloud Drive. Only usage numbers, reset times and sources are saved to ai-usage-snapshot-v2.json — never sign-in details.")
         guard panel.runModal() == .OK, let folder = panel.url else { return }
         var scoped = true
         let bookmark: Data
@@ -199,13 +200,13 @@ final class MacModel: ObservableObject {
                 scoped = false
                 bookmark = try folder.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
             }
-        } catch { message = "選んだフォルダのアクセス許可を保存できませんでした。"; return }
+        } catch { message = String(localized: "Couldn’t save access to the chosen folder."); return }
         let destination = folder.appendingPathComponent("ai-usage-snapshot-v2.json")
         if FileManager.default.fileExists(atPath: destination.path) {
             let alert = NSAlert()
-            alert.messageText = "既存の残量ファイルを置き換えますか？"
-            alert.informativeText = "ai-usage-snapshot-v2.jsonだけを更新します。他のファイルは変更しません。"
-            alert.addButton(withTitle: "置き換える"); alert.addButton(withTitle: "キャンセル")
+            alert.messageText = String(localized: "Replace the existing usage file?")
+            alert.informativeText = String(localized: "Only ai-usage-snapshot-v2.json is updated. Other files are left alone.")
+            alert.addButton(withTitle: String(localized: "Replace")); alert.addButton(withTitle: String(localized: "Cancel"))
             guard alert.runModal() == .alertFirstButtonReturn else { return }
         }
         cloudFolder = folder.path
@@ -223,7 +224,7 @@ final class MacModel: ObservableObject {
         pendingExport = nil
         cloudAccessURL?.stopAccessingSecurityScopedResource(); cloudAccessURL = nil
         UserDefaults.standard.removeObject(forKey: "snapshotExportBookmark")
-        message = "iCloudへの出力を停止しました。保存済みの残量ファイルは保持します。"
+        message = String(localized: "Stopped exporting to iCloud. The saved usage file is kept.")
     }
 
     @discardableResult
@@ -232,7 +233,7 @@ final class MacModel: ObservableObject {
         guard !cloudFolder.isEmpty else { return true }
         guard let access = cloudAccessURL else {
             recordHealth(["requiresFolderSelection": true])
-            message = "iCloudへの書き込み許可が必要です。「Scriptableフォルダを選ぶ」から同期先を選び直してください。"
+            message = String(localized: "Write access to iCloud is needed. Choose the folder again with “Choose Scriptable folder”.")
             return false
         }
         do {
@@ -244,7 +245,7 @@ final class MacModel: ObservableObject {
         } catch {
             recordHealth(["exportError": true, "exportErrorCode": (error as NSError).code,
                          "exportErrorDomain": (error as NSError).domain])
-            message = "iCloud出力に失敗しました。選択したフォルダとiCloud Driveの状態を確認してください。"; return false
+            message = String(localized: "Couldn’t export to iCloud. Check the chosen folder and iCloud Drive."); return false
         }
     }
 
@@ -281,7 +282,7 @@ final class MacModel: ObservableObject {
             exporting = false
             if let errorCode {
                 recordHealth(["exportError": true, "exportErrorCode": errorCode, "exportErrorDomain": "NSPOSIXErrorDomain"])
-                message = "iCloud出力に失敗しました。同期先とアクセス許可を確認してください。"
+                message = String(localized: "Couldn’t export to iCloud. Check the folder and its access permission.")
             } else {
                 recordHealth(["exportedAt": Date().timeIntervalSince1970, "exportError": false])
                 recordHealth(["requiresFolderSelection": false])
@@ -291,21 +292,21 @@ final class MacModel: ObservableObject {
     }
 
     func exportPairing() {
-        guard connected, let pairing = PairingStore.load() else { message = "先に接続を開始してください。"; return }
+        guard connected, let pairing = PairingStore.load() else { message = String(localized: "Start the connection first."); return }
         let panel = NSSavePanel(); panel.nameFieldStringValue = "pairing.private.json"
-        panel.message = "このファイルはMac専用の接続キーを含みます。AirDropで自分のiPhoneへ渡し、登録後に削除してください。"
+        panel.message = String(localized: "This file contains this Mac’s connection key. AirDrop it to your own iPhone and delete it after pairing.")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try JSONEncoder().encode(pairing).write(to: url, options: .atomic)
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
-            message = "接続ファイルを保存しました。AirDropでiPhoneへ渡してください。"
-        } catch { message = "接続ファイルを保存できません。" }
+            message = String(localized: "Saved the connection file. AirDrop it to your iPhone.")
+        } catch { message = String(localized: "Couldn’t save the connection file.") }
     }
 
     func stopServer() { server?.stop(); server = nil; connected = false }
     func rotateKey() {
         stopServer()
-        do { try PairingStore.delete(); key = nil; message = "接続キーを無効にしました。再接続時に新しいキーを作ります。" }
+        do { try PairingStore.delete(); key = nil; message = String(localized: "The connection key was revoked. A new key is created when you reconnect.") }
         catch { message = error.localizedDescription }
     }
 }
@@ -319,8 +320,8 @@ struct AIUsageMacApp: App {
         }
         MenuBarExtra("Usage", systemImage: "circle.hexagongrid.fill") {
             Text("Usage")
-            Button("残量を更新") { Task { await model.refresh() } }
-            Button("終了") { NSApplication.shared.terminate(nil) }
+            Button("Refresh usage") { Task { await model.refresh() } }
+            Button("Quit") { NSApplication.shared.terminate(nil) }
         }
     }
 }
@@ -334,59 +335,59 @@ struct MacDashboard: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Usage").font(.largeTitle.bold())
-                        Text("残量だけを、自分のiPhoneへ。").foregroundStyle(.secondary)
+                        Text("Just the numbers, on your own iPhone.").foregroundStyle(.secondary)
                     }
                     Spacer()
-                    if model.snapshot.isDemo { Button("デモを終了") { model.setDemo(false) } }
+                    if model.snapshot.isDemo { Button("Leave demo") { model.setDemo(false) } }
                 }
                 TimelineView(.periodic(from: .now, by: 60)) { context in
                     WidgetPreviewPanel(snapshot: model.snapshot, now: context.date)
                 }
-                GroupBox("残量の取得") {
+                GroupBox("Collection") {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Button(model.running ? "自動取得を停止" : "取得を開始") {
+                            Button(model.running ? String(localized: "Stop collecting") : String(localized: "Start collecting")) {
                                 if model.running { model.stopCollection() } else { model.startCollection() }
                             }.disabled(model.snapshot.isDemo)
-                            Button("今すぐ更新") { Task { await model.refresh() } }
+                            Button("Refresh now") { Task { await model.refresh() } }
                                 .disabled(model.collecting || model.snapshot.isDemo)
                             Spacer()
                             if model.collecting { ProgressView().controlSize(.small) }
                         }
-                        Text("Codex・Claude・Antigravity・Colabを10分ごとに照会します。各サービスへのログインが必要です。")
+                        Text("Checks Codex, Claude, Antigravity and Colab every 10 minutes. Each needs its official CLI signed in.")
                             .font(.caption).foregroundStyle(.secondary)
                         HStack {
                             ForEach([ServiceID.antigravity, .colab]) { id in
-                                Button("\(id.title)を入力") { editing = id }.disabled(model.snapshot.isDemo)
+                                Button("Enter \(id.title)") { editing = id }.disabled(model.snapshot.isDemo)
                             }
                         }
                     }.padding(10)
                 }
-                GroupBox("iCloud同期 · Scriptable版") {
+                GroupBox("iCloud sync · Scriptable") {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Button("Scriptableフォルダを選ぶ") { model.selectCloudFolder() }
-                            if !model.cloudFolder.isEmpty { Button("出力を停止") { model.stopCloudExport() } }
+                            Button("Choose Scriptable folder") { model.selectCloudFolder() }
+                            if !model.cloudFolder.isEmpty { Button("Stop export") { model.stopCloudExport() } }
                         }
-                        Text(model.cloudFolder.isEmpty ? "未設定" : "出力先: \(model.cloudFolder)")
+                        Text(model.cloudFolder.isEmpty ? String(localized: "Not set") : String(localized: "Exporting to: \(model.cloudFolder)"))
                             .font(.caption).textSelection(.enabled)
-                        Text("有料Apple Developer登録なしで使う経路です。同じApple AccountのiCloud Driveへ残量だけを出力し、iPhoneの自作Scriptableウィジェットが読みます。AppleのiCloudに残量を保存します。Macの取得とiCloud同期、iOSの更新には遅延があります。")
+                        Text("No paid Apple Developer account needed. Only usage numbers are written to iCloud Drive on the same Apple Account, where the Scriptable widget reads them. Collection, iCloud sync and widget refresh each add some delay.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.padding(10)
                 }
-                GroupBox("直接接続 · ネイティブiPhoneアプリ版") {
+                GroupBox("Direct connection · native iPhone app") {
                     VStack(alignment: .leading, spacing: 12) {
-                        TextField("このMacのTailscale IP（100.x.x.x）", text: $model.host).textFieldStyle(.roundedBorder)
+                        TextField("This Mac’s private IP (e.g. Tailscale 100.x.x.x)", text: $model.host).textFieldStyle(.roundedBorder)
                             .disabled(model.connected)
                         HStack {
-                            Button(model.connected ? "接続を停止" : "接続を開始") {
+                            Button(model.connected ? String(localized: "Stop connection") : String(localized: "Start connection")) {
                                 if model.connected { model.stopServer() } else { model.startServer() }
                             }.disabled(model.snapshot.isDemo)
-                            Button("接続ファイルを保存") { model.exportPairing() }.disabled(!model.connected)
+                            Button("Save connection file") { model.exportPairing() }.disabled(!model.connected)
                             Spacer()
-                            Button("キーを無効化", role: .destructive) { model.rotateKey() }
+                            Button("Revoke key", role: .destructive) { model.rotateKey() }
                         }
-                        Text("外出先でも使うには、両端末のTailscaleを有効にしてください。Macの起動とこのアプリの常駐が必要です。接続先は指定した非公開IPのみです。")
+                        Text("To use it away from home, keep both devices on your private network (e.g. Tailscale). The Mac must be awake with this app running. Only the private IP you enter is used.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.padding(10)
                 }
@@ -414,24 +415,24 @@ struct ManualUsageForm: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("\(service.title)の残量").font(.title2.bold())
-            Text("公式画面の表示値を入力します。空欄は未取得として扱います。")
+            Text("\(service.title) usage").font(.title2.bold())
+            Text("Enter the values shown by the service. Leave a field blank if unknown.")
                 .font(.caption).foregroundStyle(.secondary)
             if service == .antigravity {
-                TextField("5時間の残り %", text: $five)
-                Toggle("5時間の回復時刻が分かる", isOn: $fiveKnown)
-                if fiveKnown { DatePicker("回復", selection: $fiveReset) }
-                TextField("週間の残り %", text: $week)
-                Toggle("週間の回復時刻が分かる", isOn: $weekKnown)
-                if weekKnown { DatePicker("回復", selection: $weekReset) }
+                TextField("5-hour % left", text: $five)
+                Toggle("I know the 5-hour reset time", isOn: $fiveKnown)
+                if fiveKnown { DatePicker("Resets", selection: $fiveReset) }
+                TextField("Weekly % left", text: $week)
+                Toggle("I know the weekly reset time", isOn: $weekKnown)
+                if weekKnown { DatePicker("Resets", selection: $weekReset) }
             } else {
-                TextField(service == .colab ? "残りの計算ユニット（CU）" : "残りのAIクレジット", text: $balance)
+                TextField("Compute units left (CU)", text: $balance)
             }
             if let error { Text(error).foregroundStyle(.orange).font(.caption) }
             HStack {
-                Button("キャンセル") { dismiss() }
+                Button("Cancel") { dismiss() }
                 Spacer()
-                Button("保存") { submit() }.buttonStyle(.borderedProminent)
+                Button("Save") { submit() }.buttonStyle(.borderedProminent)
             }
         }.padding(26).frame(width: 450)
         .onAppear {
@@ -456,6 +457,6 @@ struct ManualUsageForm: View {
                 fiveHour: f.map { .init(usedPercent: 100 - $0, resetsAt: fiveKnown ? fiveReset : nil) },
                 weekly: w.map { .init(usedPercent: 100 - $0, resetsAt: weekKnown ? weekReset : nil) }, balance: b))
             dismiss()
-        } catch { self.error = "数値と未来の回復時刻を確認してください。" }
+        } catch { self.error = String(localized: "Check the numbers and that reset times are in the future.") }
     }
 }

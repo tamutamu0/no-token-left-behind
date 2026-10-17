@@ -6,8 +6,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
-from collect_providers import claude_setup_complete, codexbar_record, colab_record, credits_record, collect_provider, collect_all, ClaudeSetupRequired
-from credits_native_host import normalize
+from collect_providers import claude_setup_complete, codexbar_record, colab_record, collect_provider, collect_all, ClaudeSetupRequired
 from sync_once import clean_record, merge
 
 
@@ -41,38 +40,6 @@ class ProviderTests(unittest.TestCase):
             result = collect_all()
         self.assertEqual({call.args[0] for call in collect.call_args_list}, {"codex", "claude", "antigravity", "colab"})
         self.assertNotIn("googleCredits", result["status"])
-
-    def credits_payload(self):
-        return {"status": "SUCCESS", "num_turns": 0, "conversation_id": "fixture-private",
-                "response": "Remaining credits 999999", "token": "fixture-secret",
-                "usage": {k: 0 for k in ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens")},
-                "command": {"name": "credits", "data": {"remaining_credits": 0,
-                            "upgrade_uri": "https://fixture.example.invalid", "email": "fixture@example.invalid"}}}
-
-    def test_credits_uses_only_structured_balance_zero_is_real_and_private_fields_are_stripped(self):
-        p = self.credits_payload()
-        result = credits_record(p, now=1900000000)
-        self.assertEqual(result["balance"], 0)
-        self.assertEqual(result["observedAt"], 1900000000)
-        self.assertEqual(result["source"], "antigravityCli")
-        self.assertEqual(result["service"], "googleCredits")
-        self.assertIsNone(result["fiveHour"])
-        self.assertNotIn("fixture", json.dumps(result))
-        p["command"]["data"]["remaining_credits"] = 142.5
-        self.assertEqual(credits_record(p)["balance"], 142.5)
-
-    def test_credits_rejects_model_turns_tokens_errors_wrong_commands_and_missing_balance(self):
-        edits = [lambda p: p.update(status="ERROR"), lambda p: p.update(num_turns=1),
-                 lambda p: p.update(num_turns=False), lambda p: p["usage"].update(total_tokens=1),
-                 lambda p: p["usage"].update(thinking_tokens=1), lambda p: p["usage"].update(input_tokens=False),
-                 lambda p: p.update(usage={}), lambda p: p["command"].update(name="usage"),
-                 lambda p: p["command"].update(data={})]
-        for edit in edits:
-            p = self.credits_payload(); edit(p)
-            self.assertIsNone(credits_record(p))
-        for value in (None, True, "0", -1, float("nan"), float("inf"), 1e10):
-            p = self.credits_payload(); p["command"]["data"]["remaining_credits"] = value
-            self.assertIsNone(credits_record(p))
 
     def test_logged_in_account_does_not_imply_completed_cli_setup(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -148,14 +115,6 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(result["observedAt"], 1900000000)
         self.assertIsNone(colab_record("Current balance: unavailable compute units"))
         self.assertIsNone(colab_record("Current balance: 5 compute units\nCurrent balance: 6 compute units"))
-
-    def test_browser_bridge_strips_secrets_and_rejects_invalid_or_old_values(self):
-        r = normalize({"balance": 0, "observedAt": 1000, "cookie": "fixture-secret"}, now=1000)
-        self.assertEqual(r["balance"], 0)
-        self.assertNotIn("fixture", json.dumps(r))
-        for balance in (True, "0", -1, float("nan"), 1e10):
-            self.assertIsNone(normalize({"balance": balance, "observedAt": 1000}, now=1000))
-        self.assertIsNone(normalize({"balance": 42, "observedAt": 800}, now=1000))
 
     def test_background_snapshot_discards_private_fields_and_rejects_mixed_units(self):
         raw = {"service": "colab", "source": "colabCli", "observedAt": 1000,

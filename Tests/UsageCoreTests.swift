@@ -101,7 +101,7 @@ final class UsageCoreTests: XCTestCase {
         let port = UInt16.random(in: 52000...58000)
         let snapshot = UsageSnapshot.demo(at: Date(timeIntervalSince1970: floor(Date().timeIntervalSince1970)))
         let server = SnapshotServer { try snapshot.encoded() }
-        server.stateChanged = { text in if text == "接続待機中" { ready.fulfill() } }
+        server.stateChanged = { text in if text == String(localized: "Waiting for connections") { ready.fulfill() } }
         try server.start(host: "127.0.0.1", port: port, key: key)
         defer { server.stop() }
         await fulfillment(of: [ready], timeout: 5)

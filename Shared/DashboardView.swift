@@ -29,17 +29,17 @@ struct UsageDashboard: View {
     private var compactBody: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Text(snapshot.isDemo ? "AI残量 · DEMO" : "AI残量").font(.system(size: 11, weight: .semibold))
+                Text(snapshot.isDemo ? String(localized: "AI Usage · DEMO") : String(localized: "AI Usage")).font(.system(size: 11, weight: .semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("5時間").frame(width: 78, alignment: .leading)
-                Text("週間").frame(width: 78, alignment: .leading)
+                Text("5-hour").frame(width: 78, alignment: .leading)
+                Text("Weekly").frame(width: 78, alignment: .leading)
             }.font(.system(size: 9)).foregroundStyle(UsagePalette.muted)
             ForEach([ServiceID.claude, .codex, .antigravity]) { id in
                 let record = snapshot.record(id)
                 HStack(spacing: 4) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(id.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(UsagePalette.tint(id))
-                        Text(record.source == .manual && record.observedAt != nil ? "手動 · \(age(record))" : age(record))
+                        Text(record.source == .manual && record.observedAt != nil ? String(localized: "Manual · \(age(record))") : age(record))
                             .font(.system(size: 7)).foregroundStyle(record.observedAt != nil && record.isStale(at: now) ? .orange : UsagePalette.muted)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     compactWindow(record.fiveHour).frame(width: 78, alignment: .leading)
@@ -50,7 +50,7 @@ struct UsageDashboard: View {
                 compactBalance(snapshot.record(.colab))
                 Spacer(minLength: 0)
             }.font(.system(size: 10))
-            Text(snapshot.isDemo ? "架空の値 · 表示確認用" : syncFailed ? "Mac未接続 · 前回の値" : "残量の観測時刻は各行に表示")
+            Text(snapshot.isDemo ? String(localized: "Sample values for preview") : syncFailed ? String(localized: "Mac offline · last values") : String(localized: "Each row shows when it was observed"))
                 .font(.system(size: 7)).foregroundStyle(snapshot.isDemo ? .yellow : UsagePalette.muted)
         }.foregroundStyle(.white)
     }
@@ -69,11 +69,11 @@ struct UsageDashboard: View {
     private func compactBalance(_ record: UsageRecord) -> some View {
         HStack(spacing: 3) {
             Text(record.service == .colab ? "Colab" : "credits").foregroundStyle(UsagePalette.muted)
-            Text("残り").foregroundStyle(UsagePalette.muted)
+            Text("Left").foregroundStyle(UsagePalette.muted)
             Text(record.balance.map { String(format: $0.rounded() == $0 ? "%.0f" : "%.1f", $0) } ?? "—")
                 .monospacedDigit()
             if record.service == .colab { Text("CU").font(.system(size: 8)).foregroundStyle(UsagePalette.muted) }
-            if record.source == .manual && record.balance != nil { Text("手動").font(.system(size: 7)).foregroundStyle(.orange) }
+            if record.source == .manual && record.balance != nil { Text("Manual").font(.system(size: 7)).foregroundStyle(.orange) }
             if record.observedAt != nil && record.isStale(at: now) { Text(age(record)).font(.system(size: 7)).foregroundStyle(.orange) }
         }
     }
@@ -82,16 +82,16 @@ struct UsageDashboard: View {
         VStack(alignment: .leading, spacing: dense ? 8 : 16) {
             HStack {
                 Image(systemName: "circle.hexagongrid.fill").foregroundStyle(UsagePalette.tint(.codex))
-                Text("AI 残量").font(.system(size: dense ? 16 : 19, weight: .semibold))
+                Text("AI Usage").font(.system(size: dense ? 16 : 19, weight: .semibold))
                 Spacer()
-                Text(snapshot.isDemo ? "DEMO · 架空の値" : "PRIVATE")
+                Text(snapshot.isDemo ? String(localized: "DEMO · sample values") : "PRIVATE")
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
                     .foregroundStyle(snapshot.isDemo ? .yellow : UsagePalette.muted)
             }
             HStack {
-                Text("残り / 回復まで").frame(maxWidth: .infinity, alignment: .leading)
-                Text("5時間").frame(width: compact ? 80 : 105, alignment: .leading)
-                Text("週間").frame(width: compact ? 80 : 105, alignment: .leading)
+                Text("Left / resets in").frame(maxWidth: .infinity, alignment: .leading)
+                Text("5-hour").frame(width: compact ? 80 : 105, alignment: .leading)
+                Text("Weekly").frame(width: compact ? 80 : 105, alignment: .leading)
             }
             .font(.system(size: 10, weight: .medium)).foregroundStyle(UsagePalette.muted)
 
@@ -105,10 +105,10 @@ struct UsageDashboard: View {
             }
             HStack(spacing: 4) {
                 Image(systemName: syncFailed ? "wifi.slash" : "clock")
-                if snapshot.isDemo { Text("表示確認用。実際の残量ではありません") }
-                else if snapshot.records.allSatisfy({ $0.observedAt == nil }) { Text("Macと接続して残量を表示") }
+                if snapshot.isDemo { Text("Preview only. These are not your real numbers.") }
+                else if snapshot.records.allSatisfy({ $0.observedAt == nil }) { Text("Connect to your Mac to show usage") }
                 else {
-                    Text(syncFailed ? "Mac未接続 · 前回の値" : "各サービスの取得時刻を保持")
+                    Text(syncFailed ? String(localized: "Mac offline · last values") : String(localized: "Each service keeps its own observation time"))
                     Spacer(minLength: 0)
                     Text(snapshot.generatedAt, style: .time)
                 }
@@ -127,7 +127,7 @@ struct UsageDashboard: View {
                     Text(record.service.title).font(.system(size: dense ? 12 : 14, weight: .semibold))
                         .lineLimit(1).minimumScaleFactor(0.8)
                 }
-                Text(record.observedAt == nil ? "未取得" : record.source == .manual ? "手動 · \(age(record))" : age(record))
+                Text(record.observedAt == nil ? String(localized: "No data") : record.source == .manual ? String(localized: "Manual · \(age(record))") : age(record))
                     .font(.system(size: dense ? 8 : 10))
                     .foregroundStyle(record.observedAt != nil && record.isStale(at: now) ? .orange : UsagePalette.muted)
             }.frame(maxWidth: .infinity, alignment: .leading)
@@ -159,7 +159,7 @@ struct UsageDashboard: View {
                 .lineLimit(1).minimumScaleFactor(0.8)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(remaining.map { "残り\(Int($0))パーセント、\(resetLabel(window))" } ?? resetLabel(window))
+        .accessibilityLabel(remaining.map { String(localized: "\(Int($0)) percent left, \(resetLabel(window))") } ?? resetLabel(window))
     }
 
     private func balanceView(_ record: UsageRecord) -> some View {
@@ -167,7 +167,7 @@ struct UsageDashboard: View {
             HStack(spacing: 4) {
                 Text(record.service.title).font(.system(size: compact ? 9 : 12, weight: .medium))
                 if record.source == .manual && record.balance != nil {
-                    Text("手動").font(.system(size: 8)).foregroundStyle(UsagePalette.muted)
+                    Text("Manual").font(.system(size: 8)).foregroundStyle(UsagePalette.muted)
                 }
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -177,29 +177,30 @@ struct UsageDashboard: View {
                 Spacer(minLength: 0)
             }
             if record.service == .colab {
-                Text("残りの計算ユニット").font(.system(size: compact ? 8 : 10)).foregroundStyle(UsagePalette.muted)
+                Text("Compute units left").font(.system(size: compact ? 8 : 10)).foregroundStyle(UsagePalette.muted)
             }
             if !compact { Text(age(record)).font(.system(size: 9)).foregroundStyle(record.isStale(at: now) ? .orange : UsagePalette.muted) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func resetLabel(_ window: QuotaWindow?) -> String {
-        guard let window else { return "未取得 / 対象外" }
-        guard let reset = window.resetsAt else { return "回復時刻は不明" }
+        guard let window else { return String(localized: "No data / not in plan") }
+        guard let reset = window.resetsAt else { return String(localized: "Reset time unknown") }
         let seconds = reset.timeIntervalSince(now)
-        guard seconds > 0 else { return "回復後の再取得待ち" }
-        let minutes = Int(ceil(seconds / 60))
-        if minutes >= 1440 { return "あと\(minutes / 1440)日\((minutes % 1440) / 60)時間" }
-        if minutes >= 60 { return "あと\(minutes / 60)時間\(minutes % 60)分" }
-        return "あと\(minutes)分"
+        guard seconds > 0 else { return String(localized: "Awaiting refresh after reset") }
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.allowedUnits = seconds >= 86400 ? [.day, .hour] : [.hour, .minute]
+        formatter.maximumUnitCount = 2
+        let text = formatter.string(from: ceil(seconds / 60) * 60) ?? ""
+        return String(localized: "in \(text)")
     }
 
     private func age(_ record: UsageRecord) -> String {
-        guard let observed = record.observedAt else { return "未取得" }
-        let minutes = max(0, Int(now.timeIntervalSince(observed) / 60))
-        if minutes < 1 { return "たった今" }
-        if minutes < 60 { return "\(minutes)分前" }
-        if minutes < 1440 { return "\(minutes / 60)時間前" }
-        return "\(minutes / 1440)日前"
+        guard let observed = record.observedAt else { return String(localized: "No data") }
+        if now.timeIntervalSince(observed) < 60 { return String(localized: "just now") }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: observed, relativeTo: now)
     }
 }

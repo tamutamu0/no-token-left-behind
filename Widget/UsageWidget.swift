@@ -34,8 +34,8 @@ struct UsageProvider: TimelineProvider {
 }
 
 struct RefreshUsageIntent: AppIntent {
-    static var title: LocalizedStringResource = "AI残量を更新"
-    static var description = IntentDescription("自分のMacから残量だけを取得します。")
+    static var title: LocalizedStringResource = "Refresh AI usage"
+    static var description = IntentDescription("Fetches usage numbers from your own Mac.")
     func perform() async throws -> some IntentResult {
         guard let pairing = PairingStore.load() else { throw UsageError.invalidPairing }
         let snapshot = try await SnapshotClient().fetch(pairing)
@@ -54,7 +54,7 @@ struct UsageWidgetView: View {
                            dense: true, syncFailed: entry.syncFailed)
             if family == .systemLarge {
                 HStack {
-                    Text("Googleの各枠は別の残量です").font(.system(size: 9)).foregroundStyle(UsagePalette.muted)
+                    Text("Each Google quota is counted separately").font(.system(size: 9)).foregroundStyle(UsagePalette.muted)
                     Spacer()
                     Button(intent: RefreshUsageIntent()) {
                         Image(systemName: "arrow.clockwise").font(.system(size: 13, weight: .semibold))
@@ -72,7 +72,7 @@ struct AIUsageWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: UsageProvider()) { UsageWidgetView(entry: $0) }
             .configurationDisplayName("Usage")
-            .description("Claude・Codex・Antigravityの5時間と週間枠、Colabの残り計算ユニットを1枚に。")
+            .description("Claude, Codex and Antigravity 5-hour and weekly limits, plus Colab compute units, in one widget.")
             .supportedFamilies([.systemMedium, .systemLarge])
             .contentMarginsDisabled()
     }

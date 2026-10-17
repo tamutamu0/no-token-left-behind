@@ -12,7 +12,7 @@ import tempfile
 import time
 
 from collect_codex import collect as collect_codex
-from usage_io import number, record
+from usage_io import colab_cli, find_cli, number, record
 from colab_history import append_observation, observation
 from colab_allocation import attach_allocation
 from colab_grants import attach_last_grant
@@ -108,33 +108,6 @@ def colab_record(text, now=None):
     return result
 
 
-def credits_record(payload, now=None):
-    """Only the official CLI's structured, zero-turn /credits report is accepted."""
-    if not isinstance(payload, dict) or payload.get("status") != "SUCCESS":
-        return None
-    turns = payload.get("num_turns")
-    if type(turns) is not int or turns != 0:
-        return None
-    usage = payload.get("usage")
-    if not isinstance(usage, dict) or any(
-        type(usage.get(k)) not in (int, float) or usage[k] != 0
-        for k in ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens")
-    ):
-        return None
-    command = payload.get("command")
-    if not isinstance(command, dict) or command.get("name") != "credits":
-        return None
-    data = command.get("data")
-    if not isinstance(data, dict):
-        return None
-    balance = number(data.get("remaining_credits"), 1e9)
-    if balance is None:
-        return None
-    result = record("googleCredits", "antigravityCli")
-    result.update(balance=balance, observedAt=time.time() if now is None else now)
-    return result
-
-
 def run_bounded(command, seconds=40, env=None, cwd=None):
     child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                              stderr=subprocess.DEVNULL, start_new_session=True,
@@ -162,10 +135,10 @@ def collect_provider(provider):
         result = collect_codex()
         return result if result["observedAt"] is not None else None
     if provider == "colab":
-        cli = Path.home() / "Library/Application Support/AIUsage/ColabRuntime/bin/colab"
+        cli = colab_cli()
         # A scheduled check must never initiate consent or echo an OAuth URL.
         token = Path.home() / ".config/colab-cli/token.json"
-        if not cli.is_file() or not token.is_file():
+        if not cli or not token.is_file():
             return None
         code, output = run_bounded([str(cli), "--auth", "oauth2", "usage"], seconds=25)
         result = colab_record(output) if code == 0 else None
@@ -199,13 +172,13 @@ def collect_provider(provider):
             # Auth status can be logged in while /usage is blocked by onboarding.
             # Do not repeatedly send commands into theme/login/consent screens.
             raise ClaudeSetupRequired()
-    cli = "/opt/homebrew/bin/codexbar"
-    if not Path(cli).is_file():
+    cli = find_cli("codexbar", "CodexBarCLI")
+    if not cli:
         return None
     environment = os.environ.copy()
-    agy = Path.home() / ".local/bin/agy"
-    if provider == "antigravity" and agy.is_file():
-        environment["ANTIGRAVITY_CLI_PATH"] = str(agy)
+    agy = find_cli("agy")
+    if provider == "antigravity" and agy:
+        environment["ANTIGRAVITY_CLI_PATH"] = agy
     # An isolated config also blocks optional Web enrichment, cached cookies and Auto fallback.
     with tempfile.TemporaryDirectory(prefix="usage-cli-") as folder:
         config = Path(folder) / "config.json"
@@ -214,7 +187,9 @@ def collect_provider(provider):
             {"id": "antigravity", "enabled": True, "source": "cli", "extrasEnabled": False}]}))
         os.chmod(config, 0o600)
         environment["CODEXBAR_CONFIG"] = str(config)
-        environment["CLAUDE_CLI_PATH"] = "/opt/homebrew/bin/claude"
+        claude = find_cli("claude")
+        if claude:
+            environment["CLAUDE_CLI_PATH"] = claude
         code, output = run_bounded([cli, "usage", "--provider", provider, "--source", "cli", "--no-credits",
                                     "--format", "json", "--json-only"], seconds=40, env=environment)
     return codexbar_record(json.loads(output), provider) if code == 0 else None

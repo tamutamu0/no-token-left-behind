@@ -3,9 +3,42 @@ import json
 import math
 import os
 import pathlib
+import shutil
 import tempfile
 import time
 from datetime import datetime
+
+
+# Where CLIs usually live when the collector runs as a login item (with a minimal PATH):
+# Homebrew on Apple silicon and Intel, user-local installs, npm/bun globals, and app bundles.
+SEARCH_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "~/.local/bin", "~/bin", "~/.npm-global/bin",
+               "~/.bun/bin", "~/.volta/bin", "/Applications/CodexBar.app/Contents/Helpers")
+
+
+def find_cli(*names, env=None):
+    """Locate an executable: $AIUSAGE_<NAME>_PATH, then PATH, then common install locations."""
+    env = os.environ if env is None else env
+    for name in names:
+        override = env.get(f"AIUSAGE_{name.upper().replace('-', '_')}_PATH")
+        if override:
+            path = pathlib.Path(override).expanduser()
+            return str(path) if path.is_file() and os.access(path, os.X_OK) else None
+    search = os.pathsep.join([env.get("PATH", "")] + [os.path.expanduser(d) for d in SEARCH_DIRS])
+    for name in names:
+        found = shutil.which(name, path=search)
+        if found:
+            return found
+    return None
+
+
+def colab_cli(env=None):
+    """The official Colab CLI: $AIUSAGE_COLAB_PATH, else the dedicated venv the setup guide creates, else PATH."""
+    environment = os.environ if env is None else env
+    if environment.get("AIUSAGE_COLAB_PATH"):
+        return find_cli("colab", env=environment)
+    home = pathlib.Path(env["HOME"]) if env and env.get("HOME") else pathlib.Path.home()
+    dedicated = home / "Library/Application Support/AIUsage/ColabRuntime/bin/colab"
+    return str(dedicated) if dedicated.is_file() else find_cli("colab", env=environment)
 
 
 def number(value, maximum=100):

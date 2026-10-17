@@ -10,8 +10,8 @@ import time
 from collect_providers import collect_all
 from usage_io import number
 
-IDS = ("claude", "codex", "antigravity", "colab", "googleCredits")
-SOURCES = ("manual", "claudeStatusline", "claudeCli", "antigravityStatusline", "antigravityCli", "codexAppServer", "codexBar", "colabCli", "browserPage")
+IDS = ("claude", "codex", "antigravity", "colab")
+SOURCES = ("manual", "claudeStatusline", "claudeCli", "antigravityStatusline", "antigravityCli", "codexAppServer", "codexBar", "colabCli")
 
 
 def clean_record(raw, now):
@@ -22,7 +22,7 @@ def clean_record(raw, now):
         return None
     result = {"service": raw["service"], "source": raw["source"], "observedAt": observed,
               "balance": None, "fiveHour": None, "weekly": None}
-    is_balance = raw["service"] in ("colab", "googleCredits")
+    is_balance = raw["service"] == "colab"
     if is_balance:
         if raw.get("fiveHour") is not None or raw.get("weekly") is not None:
             return None

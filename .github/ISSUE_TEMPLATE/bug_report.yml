@@ -1,0 +1,40 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please run `make doctor` first. It often points to the fix.
+        **Never paste tokens, cookies, account names or emails.** Security issues go to SECURITY.md instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what you saw instead. Screenshots of the widget help.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `python3 Scripts/doctor.py --json`
+      description: It contains no secrets, but please look it over before pasting.
+      render: json
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where is the problem?
+      multiple: true
+      options: [Home Screen widget, Lock Screen widget, Mac app, Collection (a service shows "—"), Setup / install, Native iOS app]
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: macOS 15.1, iOS 18.1, Scriptable 1.7, commit abc1234
+  - type: dropdown
+    id: language
+    attributes:
+      label: Widget language
+      options: [English, 日本語, 简体中文, 한국어, Other]

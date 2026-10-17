@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		14DEAF6B821366F7FF3995F1 /* PrivateConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4E7EC02ECE2FE2D7334955 /* PrivateConnection.swift */; };
 		1CA1EC860FC88CD8E51E5B89 /* install_mac_startup.py in Resources */ = {isa = PBXBuildFile; fileRef = 7DEAE8A7AC8FD6F472F74611 /* install_mac_startup.py */; };
+		2A2C87FB40D255E63A08129B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DB07B091BD1B577845202B2F /* Localizable.xcstrings */; };
 		2B6962AEC9ECB74EE9F0B667 /* UsageWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B43CD2734A44585F765EE10D /* UsageWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BAFAACF837AD15C4A286CE1 /* collect_codex.py in Resources */ = {isa = PBXBuildFile; fileRef = 36801A5E92451121EC243E1D /* collect_codex.py */; };
 		30C5A41A730BC0C5D7DF6D26 /* WidgetPreview.html in Resources */ = {isa = PBXBuildFile; fileRef = 291E91B4F21723783A8061C4 /* WidgetPreview.html */; };
@@ -21,22 +22,26 @@
 		52E4D61867AFEEE4A0C1671E /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B599EDC43726322B8A76E2B /* DashboardView.swift */; };
 		5317576346549C46B6189969 /* AI Usage.js in Resources */ = {isa = PBXBuildFile; fileRef = CA06FB9D1C582BA058E4CC87 /* AI Usage.js */; };
 		5590E2BA08196909D0926489 /* sync_once.py in Resources */ = {isa = PBXBuildFile; fileRef = D476D88C27AA4522899E53B6 /* sync_once.py */; };
+		56FA3EC159A6ECC68906891C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DB07B091BD1B577845202B2F /* Localizable.xcstrings */; };
+		5D0D4E5D5C2E8D9BC080ECDF /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 35205A79F48E1074739403E7 /* InfoPlist.xcstrings */; };
 		645A4CC940BF041F533AC5EF /* antigravity_statusline.py in Resources */ = {isa = PBXBuildFile; fileRef = EB2C453CB2C482BCB5D6C759 /* antigravity_statusline.py */; };
 		687FB16CB5DD54537B0D3F28 /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 383F987E11E59E61EA369089 /* UsageModels.swift */; };
 		697B5607167D87530ADF8B47 /* PrivateConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4E7EC02ECE2FE2D7334955 /* PrivateConnection.swift */; };
 		6CCD65A849334429A6BCC10D /* install_statuslines.py in Resources */ = {isa = PBXBuildFile; fileRef = C00D89005775709225BD9373 /* install_statuslines.py */; };
 		6FB6AE1232D233494705E9F6 /* sign_local_app.py in Resources */ = {isa = PBXBuildFile; fileRef = 3D88990A920C519C19E14F63 /* sign_local_app.py */; };
+		7555973538981A6488130E4A /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 35205A79F48E1074739403E7 /* InfoPlist.xcstrings */; };
 		7F4B8C9CD0557B88DEFF4B15 /* claude_statusline.py in Resources */ = {isa = PBXBuildFile; fileRef = 16FDAA6707B81BA4F9864FF4 /* claude_statusline.py */; };
 		89AF95ED25EA2E000F91EC2F /* AIUsageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8176BCB65ADDD19EDA54AF6 /* AIUsageApp.swift */; };
+		8EC4A4663DDCD6C15402FF3F /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 35205A79F48E1074739403E7 /* InfoPlist.xcstrings */; };
 		906CE53FB141BB60FF31B282 /* colab_allocation.py in Resources */ = {isa = PBXBuildFile; fileRef = 28BB69FC03A7AF5E71EA7C2B /* colab_allocation.py */; };
 		97C74A26BCA89F88964165F7 /* WidgetPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEE2B99F0ADFDC714850DFB /* WidgetPreview.swift */; };
-		98FF704F1BFC3AE726289ABA /* install_credits_bridge.py in Resources */ = {isa = PBXBuildFile; fileRef = 09783ADC79C6D82EDE18F72B /* install_credits_bridge.py */; };
 		A0DFD47858AF5663D97DCBB1 /* PrivateConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4E7EC02ECE2FE2D7334955 /* PrivateConnection.swift */; };
 		A49D01D233037E92A890DBA5 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B599EDC43726322B8A76E2B /* DashboardView.swift */; };
 		A5D21F4ACB793FE80B16D410 /* UsageWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EBCE1ADDE0D0030693404C /* UsageWidget.swift */; };
-		A8096ED06CDE201A9DB0C905 /* credits_native_host.py in Resources */ = {isa = PBXBuildFile; fileRef = C2EFBB33C813FCC8E833780A /* credits_native_host.py */; };
 		C0D0B7924F0B309AFB37D14A /* AIUsageMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D3C268DA64D82F4530921E /* AIUsageMacApp.swift */; };
 		C250EAFB1911A1642D2AC043 /* usage_io.py in Resources */ = {isa = PBXBuildFile; fileRef = 415A0ABA3A9288EB0603E29B /* usage_io.py */; };
+		CC20CB3B730AE987060C0D13 /* doctor.py in Resources */ = {isa = PBXBuildFile; fileRef = 49D3A311766231585C47F7B8 /* doctor.py */; };
+		D217C9A39B5C40F1B3442F2C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DB07B091BD1B577845202B2F /* Localizable.xcstrings */; };
 		E5D4F221C10C1B82BA5F113F /* SnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B7F4ACB3D10CC99776607F /* SnapshotStore.swift */; };
 		F4398354AA873E3C487A0C9E /* colab_grants.py in Resources */ = {isa = PBXBuildFile; fileRef = ED6FC88E397B32CE180A1FE7 /* colab_grants.py */; };
 		F9F4D29EB49124511E423F9F /* collect_providers.py in Resources */ = {isa = PBXBuildFile; fileRef = B8CE617B6F828C83FD12AC5B /* collect_providers.py */; };
@@ -67,18 +72,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		09783ADC79C6D82EDE18F72B /* install_credits_bridge.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = install_credits_bridge.py; sourceTree = "<group>"; };
 		16FDAA6707B81BA4F9864FF4 /* claude_statusline.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = claude_statusline.py; sourceTree = "<group>"; };
 		2555313622A85A5E1B06B280 /* AIUsage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AIUsage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		28BB69FC03A7AF5E71EA7C2B /* colab_allocation.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = colab_allocation.py; sourceTree = "<group>"; };
 		291E91B4F21723783A8061C4 /* WidgetPreview.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = WidgetPreview.html; sourceTree = "<group>"; };
 		30C4011ADF577F4DAD51D618 /* colab_history.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = colab_history.py; sourceTree = "<group>"; };
+		35205A79F48E1074739403E7 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		36801A5E92451121EC243E1D /* collect_codex.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = collect_codex.py; sourceTree = "<group>"; };
 		383F987E11E59E61EA369089 /* UsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageModels.swift; sourceTree = "<group>"; };
 		3A9B1D4BE460D48E98F105D1 /* UsageWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = UsageWidget.entitlements; sourceTree = "<group>"; };
 		3C596C0928838DD236DB3D49 /* AIUsageMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIUsageMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D88990A920C519C19E14F63 /* sign_local_app.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = sign_local_app.py; sourceTree = "<group>"; };
 		415A0ABA3A9288EB0603E29B /* usage_io.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = usage_io.py; sourceTree = "<group>"; };
+		49D3A311766231585C47F7B8 /* doctor.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = doctor.py; sourceTree = "<group>"; };
 		6B599EDC43726322B8A76E2B /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		7DEAE8A7AC8FD6F472F74611 /* install_mac_startup.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = install_mac_startup.py; sourceTree = "<group>"; };
 		7F608AF375195F3128820344 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -90,11 +96,11 @@
 		B8CE617B6F828C83FD12AC5B /* collect_providers.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = collect_providers.py; sourceTree = "<group>"; };
 		C00D89005775709225BD9373 /* install_statuslines.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = install_statuslines.py; sourceTree = "<group>"; };
 		C1EBCE1ADDE0D0030693404C /* UsageWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageWidget.swift; sourceTree = "<group>"; };
-		C2EFBB33C813FCC8E833780A /* credits_native_host.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = credits_native_host.py; sourceTree = "<group>"; };
 		C3CD58652C6F5CAEEF776DEB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C5D3C268DA64D82F4530921E /* AIUsageMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageMacApp.swift; sourceTree = "<group>"; };
 		CA06FB9D1C582BA058E4CC87 /* AI Usage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "AI Usage.js"; sourceTree = "<group>"; };
 		D476D88C27AA4522899E53B6 /* sync_once.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = sync_once.py; sourceTree = "<group>"; };
+		DB07B091BD1B577845202B2F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		E4B7F4ACB3D10CC99776607F /* SnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotStore.swift; sourceTree = "<group>"; };
 		EB2C453CB2C482BCB5D6C759 /* antigravity_statusline.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = antigravity_statusline.py; sourceTree = "<group>"; };
 		ED6FC88E397B32CE180A1FE7 /* colab_grants.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = colab_grants.py; sourceTree = "<group>"; };
@@ -107,6 +113,7 @@
 			children = (
 				D7C8E12E99A4C3A668B10833 /* iOS */,
 				52FC3A05269AD9484CD2CCB8 /* Mac */,
+				DE075F9616BA4F70FAC867CD /* Resources */,
 				CA51C600F89020FCF5D86706 /* Scriptable */,
 				C6657AE18195A3A18D408E9B /* Scripts */,
 				C64AA0C98EB8C428632C130A /* Shared */,
@@ -157,8 +164,7 @@
 				30C4011ADF577F4DAD51D618 /* colab_history.py */,
 				36801A5E92451121EC243E1D /* collect_codex.py */,
 				B8CE617B6F828C83FD12AC5B /* collect_providers.py */,
-				C2EFBB33C813FCC8E833780A /* credits_native_host.py */,
-				09783ADC79C6D82EDE18F72B /* install_credits_bridge.py */,
+				49D3A311766231585C47F7B8 /* doctor.py */,
 				7DEAE8A7AC8FD6F472F74611 /* install_mac_startup.py */,
 				C00D89005775709225BD9373 /* install_statuslines.py */,
 				3D88990A920C519C19E14F63 /* sign_local_app.py */,
@@ -196,6 +202,15 @@
 			path = iOS;
 			sourceTree = "<group>";
 		};
+		DE075F9616BA4F70FAC867CD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				35205A79F48E1074739403E7 /* InfoPlist.xcstrings */,
+				DB07B091BD1B577845202B2F /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -204,6 +219,7 @@
 			buildConfigurationList = DA42573CE1B4849C38E7E79E /* Build configuration list for PBXNativeTarget "UsageWidget" */;
 			buildPhases = (
 				A54F102336771F5FF3800AB0 /* Sources */,
+				489243C83417835FBE05A040 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -221,6 +237,7 @@
 			buildConfigurationList = 5CEE5760E3CBC85FDF8066BB /* Build configuration list for PBXNativeTarget "AIUsage" */;
 			buildPhases = (
 				C4A212587E02FFD0B568D619 /* Sources */,
+				FCBB912DF7C37E41236DF196 /* Resources */,
 				16A92F1FC5A52503917C6089 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -279,6 +296,7 @@
 			knownRegions = (
 				Base,
 				en,
+				ja,
 			);
 			mainGroup = 1A9B208FA40296A655AEFA28;
 			minimizedProjectReferenceProxies = 1;
@@ -295,11 +313,22 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		489243C83417835FBE05A040 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D0D4E5D5C2E8D9BC080ECDF /* InfoPlist.xcstrings in Resources */,
+				D217C9A39B5C40F1B3442F2C /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9D938856A6CFEB37460461CF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				5317576346549C46B6189969 /* AI Usage.js in Resources */,
+				7555973538981A6488130E4A /* InfoPlist.xcstrings in Resources */,
+				56FA3EC159A6ECC68906891C /* Localizable.xcstrings in Resources */,
 				30C5A41A730BC0C5D7DF6D26 /* WidgetPreview.html in Resources */,
 				645A4CC940BF041F533AC5EF /* antigravity_statusline.py in Resources */,
 				7F4B8C9CD0557B88DEFF4B15 /* claude_statusline.py in Resources */,
@@ -308,13 +337,21 @@
 				33FBB1C1950DFEEF8E528F66 /* colab_history.py in Resources */,
 				2BAFAACF837AD15C4A286CE1 /* collect_codex.py in Resources */,
 				F9F4D29EB49124511E423F9F /* collect_providers.py in Resources */,
-				A8096ED06CDE201A9DB0C905 /* credits_native_host.py in Resources */,
-				98FF704F1BFC3AE726289ABA /* install_credits_bridge.py in Resources */,
+				CC20CB3B730AE987060C0D13 /* doctor.py in Resources */,
 				1CA1EC860FC88CD8E51E5B89 /* install_mac_startup.py in Resources */,
 				6CCD65A849334429A6BCC10D /* install_statuslines.py in Resources */,
 				6FB6AE1232D233494705E9F6 /* sign_local_app.py in Resources */,
 				5590E2BA08196909D0926489 /* sync_once.py in Resources */,
 				C250EAFB1911A1642D2AC043 /* usage_io.py in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FCBB912DF7C37E41236DF196 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8EC4A4663DDCD6C15402FF3F /* InfoPlist.xcstrings in Resources */,
+				2A2C87FB40D255E63A08129B /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

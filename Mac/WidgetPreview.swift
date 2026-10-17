@@ -4,7 +4,7 @@ import WebKit
 enum PreviewSize: String, CaseIterable, Identifiable {
     case small, medium, large
     var id: String { rawValue }
-    var title: String { switch self { case .small: return "小"; case .medium: return "中"; case .large: return "大" } }
+    var title: String { switch self { case .small: return String(localized: "Small"); case .medium: return String(localized: "Medium"); case .large: return String(localized: "Large") } }
     var width: CGFloat { self == .small ? 155 : 329 }
     var height: CGFloat { switch self { case .small: return 155; case .medium: return 169; case .large: return 345 } }
 }
@@ -12,7 +12,7 @@ enum PreviewSize: String, CaseIterable, Identifiable {
 enum PreviewAppearance: String, CaseIterable, Identifiable {
     case system, light, dark
     var id: String { rawValue }
-    var title: String { switch self { case .system: return "自動"; case .light: return "ライト"; case .dark: return "ダーク" } }
+    var title: String { switch self { case .system: return String(localized: "Auto"); case .light: return String(localized: "Light"); case .dark: return String(localized: "Dark") } }
     func resolved(_ scheme: ColorScheme) -> String {
         self == .system ? (scheme == .dark ? "dark" : "light") : rawValue
     }
@@ -29,17 +29,17 @@ struct WidgetPreviewPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("ウィジェット").font(.headline)
+                Text("Widget").font(.headline)
                 Spacer()
-                Toggle("サンプル表示", isOn: $sample).toggleStyle(.switch).controlSize(.small)
+                Toggle("Sample data", isOn: $sample).toggleStyle(.switch).controlSize(.small)
                     .fixedSize()
             }
             HStack(spacing: 16) {
-                Picker("サイズ", selection: $size) {
+                Picker("Size", selection: $size) {
                     ForEach(PreviewSize.allCases) { Text($0.title).tag($0) }
                 }.pickerStyle(.segmented).frame(width: 180)
                 Spacer(minLength: 0)
-                Picker("外観", selection: $appearance) {
+                Picker("Appearance", selection: $appearance) {
                     ForEach(PreviewAppearance.allCases) { Text($0.title).tag($0) }
                 }.pickerStyle(.segmented).frame(width: 220)
             }
@@ -52,7 +52,7 @@ struct WidgetPreviewPanel: View {
                     .shadow(color: .black.opacity(0.08), radius: 10, y: 3)
                     .padding(24)
             }.frame(maxWidth: .infinity).frame(height: size.height + 48)
-            Text("iPhoneの画面サイズにより、文字幅や余白は少し異なります。")
+            Text("Text width and spacing vary slightly with the iPhone model.")
                 .font(.caption).foregroundStyle(.secondary)
         }.padding(18)
             .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 22))
@@ -77,7 +77,7 @@ struct WidgetPreviewWebView: NSViewRepresentable {
               let sourceURL = Bundle.main.url(forResource: "AI Usage", withExtension: "js"),
               let template = try? String(contentsOf: templateURL, encoding: .utf8),
               let source = try? String(contentsOf: sourceURL, encoding: .utf8) else {
-            view.loadHTMLString("<p>プレビューを読み込めませんでした。</p>", baseURL: nil)
+            view.loadHTMLString("<p>" + String(localized: "Couldn’t load the preview.") + "</p>", baseURL: nil)
             return view
         }
         // Use the shipped Scriptable functions; never run its iCloud/app entry point.
@@ -90,7 +90,9 @@ struct WidgetPreviewWebView: NSViewRepresentable {
     func updateNSView(_ view: WKWebView, context: Context) {
         guard let bytes = try? snapshot.encoded(), let json = String(data: bytes, encoding: .utf8) else { return }
         // The snapshot encoder only allows numerical quota metadata, never account secrets.
-        let call = "window.renderUsagePreview(\(json), '\(size.rawValue)', '\(appearance)', \(now.timeIntervalSince1970));"
+        // The preview speaks the app's language, like the widget follows the iPhone's.
+        let language = (Bundle.main.preferredLocalizations.first ?? "en").filter { $0.isLetter || $0 == "-" }
+        let call = "window.renderUsagePreview(\(json), '\(size.rawValue)', '\(appearance)', \(now.timeIntervalSince1970), '\(language)');"
         context.coordinator.update(view, call: call)
     }
 

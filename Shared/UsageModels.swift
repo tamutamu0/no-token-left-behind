@@ -1,7 +1,7 @@
 import Foundation
 
 enum ServiceID: String, Codable, CaseIterable, Identifiable {
-    case claude, codex, antigravity, colab, googleCredits
+    case claude, codex, antigravity, colab
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -9,25 +9,23 @@ enum ServiceID: String, Codable, CaseIterable, Identifiable {
         case .codex: return "Codex"
         case .antigravity: return "Antigravity"
         case .colab: return "Colab"
-        case .googleCredits: return "AI credits"
         }
     }
 }
 
 enum UsageSource: String, Codable {
-    case claudeStatusline, claudeCli, codexAppServer, antigravityStatusline, antigravityCli, codexBar, colabCli, browserPage, manual, demo
+    case claudeStatusline, claudeCli, codexAppServer, antigravityStatusline, antigravityCli, codexBar, colabCli, manual, demo
     var title: String {
         switch self {
-        case .claudeStatusline: return "公式ステータスライン"
-        case .claudeCli: return "公式Claude CLI"
-        case .codexAppServer: return "公式照会"
-        case .antigravityStatusline: return "公式ステータスライン"
-        case .antigravityCli: return "公式Antigravity CLI"
-        case .codexBar: return "CodexBar照会"
-        case .colabCli: return "公式Colab照会"
-        case .browserPage: return "公式画面"
-        case .manual: return "手動入力"
-        case .demo: return "デモ"
+        case .claudeStatusline: return String(localized: "Official status line")
+        case .claudeCli: return String(localized: "Official Claude CLI")
+        case .codexAppServer: return String(localized: "Official Codex CLI")
+        case .antigravityStatusline: return String(localized: "Official status line")
+        case .antigravityCli: return String(localized: "Official Antigravity CLI")
+        case .codexBar: return String(localized: "CLI via CodexBar")
+        case .colabCli: return String(localized: "Official Colab CLI")
+        case .manual: return String(localized: "Manual entry")
+        case .demo: return String(localized: "Demo")
         }
     }
 }
@@ -60,7 +58,7 @@ struct UsageRecord: Codable, Identifiable, Equatable {
     /// First observation showing the latest Colab grant (a balance rise), if one was seen.
     var lastGrantAt: Date? = nil
     var id: String { service.id }
-    var balanceUnit: String { service == .colab ? "CU" : "credits" }
+    var balanceUnit: String { "CU" }
 
     func isStale(at now: Date) -> Bool {
         guard let observedAt else { return true }
@@ -77,11 +75,11 @@ enum UsageError: LocalizedError {
     case invalidData, invalidPairing, connection, timeout, storage
     var errorDescription: String? {
         switch self {
-        case .invalidData: return "取得した残量データを確認できません。"
-        case .invalidPairing: return "接続情報を確認してください。非公開IPと32バイトの接続キーが必要です。"
-        case .connection: return "Macに接続できません。Macの起動状態とTailscaleを確認してください。"
-        case .timeout: return "接続がタイムアウトしました。前回の値を表示しています。"
-        case .storage: return "保存できません。署名とApp Groupの設定を確認してください。"
+        case .invalidData: return String(localized: "The usage data could not be verified.")
+        case .invalidPairing: return String(localized: "Check the connection details. A private IP address and a 32-byte key are required.")
+        case .connection: return String(localized: "Can’t reach the Mac. Check that it is awake and on the same private network (e.g. Tailscale).")
+        case .timeout: return String(localized: "The connection timed out. Showing the last values.")
+        case .storage: return String(localized: "Can’t save. Check the signing and App Group settings.")
         }
     }
 }
@@ -91,6 +89,8 @@ struct UsageSnapshot: Codable, Equatable {
     let generatedAt: Date
     let isDemo: Bool
     let records: [UsageRecord]
+
+    enum CodingKeys: String, CodingKey { case version, generatedAt, isDemo, records }
 
     static let maxBytes = 16_384
     static var empty: UsageSnapshot {
@@ -111,7 +111,6 @@ struct UsageSnapshot: Codable, Equatable {
                         weekly: .init(usedPercent: 36, resetsAt: now.addingTimeInterval(345600)), balance: nil),
             UsageRecord(service: .colab, source: .demo, observedAt: now, fiveHour: nil, weekly: nil, balance: 142.5,
                         balanceAllocation: .init(total: 200, basis: .demo)),
-            UsageRecord(service: .googleCredits, source: .demo, observedAt: now, fiveHour: nil, weekly: nil, balance: 320)
         ]
         return UsageSnapshot(version: 1, generatedAt: now, isDemo: true, records: rows)
     }
@@ -127,7 +126,7 @@ struct UsageSnapshot: Codable, Equatable {
             guard (r.source == .demo) == isDemo,
                   r.observedAt.map({ $0.timeIntervalSince1970.isFinite && $0 <= now.addingTimeInterval(60) }) ?? true,
                   r.balance.map({ $0.isFinite && $0 >= 0 && $0 <= 1e9 }) ?? true else { throw UsageError.invalidData }
-            let isBalance = r.service == .colab || r.service == .googleCredits
+            let isBalance = r.service == .colab
             guard !isBalance || (r.fiveHour == nil && r.weekly == nil),
                   isBalance || r.balance == nil else { throw UsageError.invalidData }
             if let allocation = r.balanceAllocation {
@@ -180,5 +179,26 @@ struct Pairing: Codable, Equatable {
                || (a == 100 && (64...127).contains(b)) || (allowLoopback && a == 127)),
               port >= 1024, let bytes = Data(base64Encoded: key), bytes.count == 32 else { throw UsageError.invalidPairing }
         return self
+    }
+}
+
+/// Records for services this build does not know (older or newer collectors) are skipped,
+/// so a retired or future service never makes the whole snapshot unreadable.
+private struct KnownServiceRecord: Decodable {
+    let record: UsageRecord?
+    private enum Key: String, CodingKey { case service }
+    init(from decoder: Decoder) throws {
+        let service = try decoder.container(keyedBy: Key.self).decode(String.self, forKey: .service)
+        record = ServiceID(rawValue: service) == nil ? nil : try UsageRecord(from: decoder)
+    }
+}
+
+extension UsageSnapshot {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(version: try c.decode(Int.self, forKey: .version),
+                  generatedAt: try c.decode(Date.self, forKey: .generatedAt),
+                  isDemo: try c.decode(Bool.self, forKey: .isDemo),
+                  records: try c.decode([KnownServiceRecord].self, forKey: .records).compactMap(\.record))
     }
 }

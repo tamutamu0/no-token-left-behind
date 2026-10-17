@@ -1,236 +1,328 @@
+<div align="center">
+
+**English** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [한국어](README.ko.md)
+
 # AI Usage Widget
 
-**Claude・Codex・Antigravity の利用枠と、Google Colab の計算ユニット残量を、iPhone のホーム画面・ロック画面ウィジェットで一目で確認するための仕組みです。**
+**See how much of Claude, Codex, Antigravity and Google Colab you have left — on your iPhone’s Home Screen and Lock Screen.**
 
-Mac が各サービスの公式 CLI から残量を 10 分ごとに読み取り、数値だけを iCloud Drive に書き出します。iPhone 側は無料アプリ [Scriptable](https://scriptable.app/) のスクリプトがそのファイルを読んでウィジェットに描きます。有料の Apple Developer 登録やサーバーは要りません。
+[![CI](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml/badge.svg)](https://github.com/tamutamu0/ai-usage-widget/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![iOS 16+](https://img.shields.io/badge/iOS-16%2B-black?logo=apple)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
+![No server](https://img.shields.io/badge/server-none-success)
+![Languages](https://img.shields.io/badge/UI-EN%20%C2%B7%20JA%20%C2%B7%20ZH%20%C2%B7%20KO-informational)
 
-> A personal dashboard for AI subscription limits. A macOS collector reads the official CLIs of Claude Code, Codex, Antigravity and Google Colab every 10 minutes and writes numbers only to iCloud Drive; a Scriptable script renders Home Screen and Lock Screen widgets on iPhone. No paid Apple Developer account and no server required. (UI and docs are in Japanese.)
+<img src="docs/images/en/light.png" alt="Home Screen widgets in small, medium and large" width="900">
 
-![ホーム画面ウィジェット（ライト）](docs/images/light.png)
+</div>
 
-![ホーム画面ウィジェット（ダーク）](docs/images/dark.png)
+Your Mac already has the official command-line tools signed in. This project asks them — and only them — how much of each limit is left, every 10 minutes, and drops **just the numbers** into iCloud Drive. A tiny [Scriptable](https://scriptable.app/) script on your iPhone turns that file into widgets.
 
-<p align="center"><img src="docs/images/lock.png" alt="ロック画面ウィジェット" width="520"></p>
-
-*スクリーンショットはすべて架空のデモデータです。*
+No server. No API keys. No paid Apple Developer account. Nothing you type into a website.
 
 ---
 
-## 目次
+## Contents
 
-- [できること](#できること)
-- [表示の見方](#表示の見方)
-- [仕組み](#仕組み)
-- [必要なもの](#必要なもの)
-- [セットアップ](#セットアップ)
-- [設定](#設定)
-- [Colab の「次の付与まで」について](#colab-の次の付与までについて)
-- [プライバシーと安全性](#プライバシーと安全性)
-- [制限事項](#制限事項)
-- [開発](#開発)
-- [ドキュメント](#ドキュメント)
+- [Highlights](#highlights)
+- [Reading the widget](#reading-the-widget)
+- [Gallery](#gallery)
+- [Quick start](#quick-start)
+- [Requirements](#requirements)
+- [How it works](#how-it-works)
+- [Configuration](#configuration)
+- [Colab: “next grant in N days”](#colab-next-grant-in-n-days)
+- [Everyday commands](#everyday-commands)
+- [Privacy & security](#privacy--security)
+- [FAQ](#faq)
+- [Troubleshooting](#troubleshooting)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing) · [License](#license)
 
-## できること
+## Highlights
 
 | | |
 |---|---|
-| **4 サービスを 1 枚に** | Claude（5 時間・週間）、Codex（5 時間・週間）、Antigravity（Gemini 枠の 5 時間・週間）、Google Colab（計算ユニット残高） |
-| **回復までの時間** | 各枠の残り % に加えて「あと 2h」「あと 4 日 3 時間」のように回復までの時間を表示 |
-| **Colab は残高として** | 時間で回復する枠とは分けて、CU の量・総量に対する割合・次の付与日までの日数を表示 |
-| **ホーム画面 3 サイズ** | 小・中・大。iPhone のライト/ダークに自動追従 |
-| **ロック画面 3 種類** | 時計の上の 1 行、長方形、円形（iOS 16 以降） |
-| **古い値をごまかさない** | 15 分以上古い値はオレンジ。回復時刻を過ぎた枠は 100% に戻さず「再取得待ち」 |
-| **数値しか送らない** | ログイン情報・会話・メールは iCloud にもスクリプトにも渡らない |
+| 🧭 **Four services, one glance** | Claude and Codex (5-hour + weekly), Antigravity (Gemini 5-hour + weekly), Google Colab (compute units). |
+| ⏱️ **When it comes back** | Every limit shows what is left *and* when it resets — “72% · in 2h”. |
+| 💳 **Colab as a balance** | Compute units are a stock, not a window: shown apart, with the units left and a countdown to the next monthly grant that **learns the real grant day** from your history. |
+| 🔒 **Lock Screen too** | Activity-style rings, a compact bar chart, or one line above the clock. The ring follows whichever service is closest to running out. |
+| 🌐 **Speaks your language** | Widget in English, 日本語, 简体中文 and 한국어 (follows the iPhone). Mac and iPhone apps in English and Japanese. |
+| 🧪 **Honest numbers** | Values older than 15 minutes turn orange. A limit past its reset time says “Awaiting refresh” instead of pretending to be 100%. |
+| 🩺 **Self-diagnosing** | `make doctor` checks every CLI, sign-in, the Mac app and the iCloud export, and tells you the exact fix. |
+| 🛡️ **Numbers only** | Only official CLIs are asked. No cookies, no tokens, no browser automation. Your iCloud file holds percentages and timestamps — nothing else. |
 
-## 表示の見方
+## Reading the widget
 
-### ホーム画面
+<p align="center"><img src="docs/images/en/anatomy.png" alt="What each part of the widget means" width="820"></p>
 
-- **中・大サイズ**：行がサービス、列が「5 時間」「週間」。大きな数字が残り %、横（大サイズは下）が回復までの時間、下のバーが残量です。
-- **小サイズ**：上の段にサービス名、下の段に 5 時間・週間の残り % とバー。回復時間は省略します。
-- **5 時間枠がないサービス**（プランによっては Codex など）は、そのセルを空けます。「—」も出しません。
-- **区切り線の下が Colab**：残っている CU を大きく、総量・割合・「次の付与まで あと○日」を小さく表示します。
-- 残り 20% 以下と、15 分以上古い値はオレンジになります。
+- **Rows** are services; **columns** are the 5-hour and weekly windows.
+- The **big number** is what is left; the **bar** shows the same at a glance; the small text is the **time until it resets**.
+- A service without a 5-hour window (some plans) simply leaves that cell **blank** — no dash, no empty bar.
+- Below the line is **Colab**: units left, the total if you confirmed it, and the **days until the next grant**.
+- **Orange** means “low (≤ 20%)” or “this value is more than 15 minutes old”.
 
-### ロック画面
+## Gallery
 
-| 種類 | 表示 |
+<table>
+<tr>
+<td width="50%"><img src="docs/images/en/dark.png" alt="Dark mode"></td>
+<td width="50%"><img src="docs/images/en/lock.png" alt="Lock Screen widgets"></td>
+</tr>
+<tr>
+<td align="center"><b>Dark mode</b> — follows the system appearance.</td>
+<td align="center"><b>Lock Screen</b> — inline, rectangular, and rings (outer 5-hour, inner weekly).</td>
+</tr>
+</table>
+
+| Widget | What it shows |
 |---|---|
-| 1 行（時計の上） | いちばん先に尽きそうな枠。例「Codex 5h 25% · あと 1h」 |
-| 長方形 | サービスごとに 5h・週の残り % と細いバー。最下段に Colab の残り CU と付与までの日数 |
-| 円形 | アクティビティ風の二重リング（外側が 5 時間、内側が週間）。中央は少ない方の残り %。**パラメータなしなら、いちばん残りが少ないサービスを自動で表示**。Colab は残高の割合のリングと残り CU・付与までの日数 |
+| **Small** | Each service with its 5-hour and weekly % and bars; Colab units and days to the next grant. |
+| **Medium** | Adds “in 2h” reset times next to every number. |
+| **Large** | Full reset times (“in 4h 59m”), Colab usage and the grant countdown. |
+| **Lock · inline** | The window closest to running out, e.g. “Codex 5h 25% · in 1h”. |
+| **Lock · rectangular** | Every service’s 5h/weekly % with thin bars, Colab at the bottom. |
+| **Lock · circular** | Two rings for one service — automatically the one with the least left, or pin one with a parameter. |
 
-ロック画面のウィジェットは iOS が壁紙に合わせて単色にするため、色ではなく明るさで区別しています。
+## Quick start
 
-## 仕組み
+> **Just want to see it?** Install Scriptable, add the script (step 3) and set the widget’s *Parameter* to `demo`. You get the full widget with sample data — no Mac needed.
 
-```mermaid
-flowchart LR
-  subgraph Mac["Mac（10 分ごと）"]
-    A[Codex CLI<br/>account/rateLimits/read] --> C
-    B1[Claude Code CLI /usage<br/>via CodexBar] --> C
-    B2[Antigravity CLI /usage<br/>via CodexBar] --> C
-    B3[Colab CLI usage] --> C
-    C[収集・検証<br/>Scripts/*.py] --> D[AIUsageMac.app<br/>数値だけを再エンコード]
-  end
-  D -->|ai-usage-snapshot-v2.json<br/>最大 16 KiB| E[(iCloud Drive<br/>Scriptable フォルダ)]
-  E --> F[Scriptable<br/>AI Usage.js]
-  F --> G[ホーム画面<br/>ウィジェット]
-  F --> H[ロック画面<br/>ウィジェット]
-```
-
-1. Mac の常駐アプリ（`AIUsageMac.app`）が 10 分ごとに収集スクリプトを実行します。各サービスへの問い合わせは、すでにログイン済みの**公式 CLI** に任せます。
-2. 結果は許可した項目（サービス ID・残り %・回復時刻・残高・観測時刻）だけに絞って検証し、iCloud Drive の Scriptable フォルダへ 1 ファイルとして書き出します。
-3. iPhone の Scriptable スクリプトがファイルを読み、もう一度検証してからウィジェットを描きます。読み込みに失敗したときは、前回の検証済みの値を観測時刻つきで表示し続けます。
-
-詳しくは [docs/how-it-works.md](docs/how-it-works.md) を参照してください。
-
-## 必要なもの
-
-| 用途 | 必要なもの |
-|---|---|
-| iPhone | iOS 16 以降（ロック画面ウィジェットを使う場合）、[Scriptable](https://apps.apple.com/app/scriptable/id1405459188)（無料）、iCloud Drive |
-| Mac | macOS 14 以降、Xcode（アプリのビルド用）、同じ Apple アカウントの iCloud Drive |
-| Codex | 公式 [Codex CLI](https://github.com/openai/codex) にログイン済み |
-| Claude | 公式 [Claude Code](https://code.claude.com/) CLI にログイン済み（初回セットアップ完了）＋ [CodexBar](https://codexbar.app/)（CLI の起動・解析補助） |
-| Antigravity | 公式 Antigravity CLI にログイン済み＋ CodexBar |
-| Colab | 公式 [google-colab-cli](https://github.com/googlecolab/google-colab-cli) と OAuth の認可、Colab の計算ユニットがある有料プラン |
-
-使わないサービスは設定しなくて構いません。その行は「—」になります。
-
-## セットアップ
-
-所要時間は 20〜30 分ほどです。詳しい手順とつまずきやすい点は [docs/setup.md](docs/setup.md) にあります。
-
-### 1. Mac アプリをビルドして起動
+**1. Build and install the Mac app** (about 2 minutes)
 
 ```bash
 git clone https://github.com/tamutamu0/ai-usage-widget.git
 cd ai-usage-widget
-xcodebuild -project AIUsage.xcodeproj -scheme AIUsageMac -derivedDataPath build-mac CODE_SIGN_IDENTITY=- build
-open build-mac/Build/Products/Debug/AIUsageMac.app
+make install          # builds, signs locally, starts at login
 ```
 
-Xcode で `AIUsage.xcodeproj` を開き、`AIUsageMac` スキームで実行しても同じです。ログイン時に自動起動させるには次を実行します（このMac専用の署名を作り、ログイン項目に登録します）。
+**2. Connect the services you use** (skip any you don’t)
 
 ```bash
-python3 Scripts/install_mac_startup.py
-```
+brew install --cask codexbar                      # helper that drives the Claude / Antigravity CLIs
+python3 Scripts/install_statuslines.py            # also read Claude / Antigravity status lines (non-destructive)
 
-### 2. 取得元をつなぐ
-
-```bash
-# Colab CLI（このパスに置くと自動で使われます）
+# Google Colab: official CLI in the place the app looks for it, then authorize once
 python3 -m venv "$HOME/Library/Application Support/AIUsage/ColabRuntime"
 "$HOME/Library/Application Support/AIUsage/ColabRuntime/bin/pip" install google-colab-cli
-"$HOME/Library/Application Support/AIUsage/ColabRuntime/bin/colab" --auth oauth2 usage   # 初回だけ認可
-
-# Claude / Antigravity の CLI 起動補助
-brew install --cask codexbar
-
-# Claude / Antigravity の公式 statusLine からの取り込み（既存設定は上書きしません）
-python3 Scripts/install_statuslines.py
+"$HOME/Library/Application Support/AIUsage/ColabRuntime/bin/colab" --auth oauth2 usage
 ```
 
-Codex は公式 CLI にログインしていれば追加の設定は要りません。Mac アプリの「取得を開始」を押すと 10 分ごとの照会が始まります。
+Codex needs nothing extra if `codex login` is done. Open the Mac app and press **Start collecting**.
 
-### 3. iPhone にウィジェットを置く
+**3. Put it on your iPhone**
 
-1. iPhone に Scriptable を入れて一度開き、Mac の Finder で **iCloud Drive › Scriptable** フォルダができたことを確認します。
-2. [`Scriptable/AI Usage.js`](Scriptable/AI%20Usage.js) をそのフォルダにコピーします。
-3. Mac アプリの「Scriptable フォルダを選ぶ」で、同じ **iCloud Drive › Scriptable** フォルダを選びます。
-4. iPhone のホーム画面を長押し → 左上の「＋」→ Scriptable → サイズを選んで追加 → ウィジェットを長押しして編集 → Script を「AI Usage」にします。
-5. ロック画面には、ロック画面を長押し →「カスタマイズ」→ ウィジェット欄 → Scriptable から追加します。
+```bash
+make widget           # copies the script to iCloud Drive › Scriptable
+```
 
-Mac がなくても見た目だけ確認したいときは、ウィジェットの Parameter に `demo` と入れると架空データで表示されます。
+1. In the Mac app, **Choose Scriptable folder** → pick **iCloud Drive › Scriptable**.
+2. On the iPhone: touch and hold the Home Screen → **Edit** → **Add Widget** → **Scriptable** → pick a size → tap the widget → **Script: AI Usage**.
+3. Lock Screen: touch and hold it → **Customize** → tap the widget area → **Scriptable**.
 
-## 設定
+**4. Check everything**
 
-### ウィジェットの Parameter
+```bash
+make doctor
+```
 
-ウィジェットを長押し →「ウィジェットを編集」の Parameter に、空白区切りで書きます。
+```text
+Codex
+  ✓ Codex CLI          /opt/homebrew/bin/codex · last collection succeeded
+Claude
+  ✓ Claude Code CLI    /opt/homebrew/bin/claude
+  ✓ CodexBar           /opt/homebrew/bin/codexbar
+  ✓ Collection         last collection succeeded
+...
+iPhone
+  ✓ Usage file         updated 1 min ago
 
-| 書き方 | 効果 |
+16 ok · 0 warning(s) · 0 problem(s)
+```
+
+The [setup guide](docs/en/setup.md) walks through every step with the details that trip people up.
+
+## Requirements
+
+| | |
 |---|---|
-| （空欄） | 実データを表示 |
-| `demo` | 架空データで表示 |
-| `claude` / `codex` / `antigravity` / `colab` | 円形・1 行のロック画面ウィジェットに出すサービスを固定（指定しなければ、いちばん残りが少ないサービスを自動で表示） |
-| `grant=4` | このウィジェットだけ Colab の付与日を毎月 4 日として扱う |
+| **iPhone** | iOS 16 or later for Lock Screen widgets · [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) (free) · iCloud Drive |
+| **Mac** | macOS 14 or later (Apple silicon or Intel) · Xcode to build · iCloud Drive on the same Apple Account |
+| **Codex** | Official [Codex CLI](https://github.com/openai/codex), signed in |
+| **Claude** | Official [Claude Code](https://code.claude.com/) CLI, signed in and past first-run setup · [CodexBar](https://codexbar.app/) |
+| **Antigravity** | Official Antigravity CLI, signed in · CodexBar |
+| **Colab** | Official [google-colab-cli](https://github.com/googlecolab/google-colab-cli), authorized · a plan that includes compute units |
 
-例：`colab`、`demo colab`、`colab grant=15`
+Use any subset. Services you don’t connect show “—”.
 
-### 設定ファイル（任意）
+## How it works
 
-iCloud Drive の Scriptable フォルダに `ai-usage-settings.json` を置くと、すべてのウィジェットに効きます。
+```mermaid
+flowchart LR
+  subgraph Mac["Your Mac · every 10 minutes"]
+    A["Codex CLI<br/>account/rateLimits/read"] --> C
+    B1["Claude Code CLI /usage<br/>via CodexBar"] --> C
+    B2["Antigravity CLI /usage<br/>via CodexBar"] --> C
+    B3["Colab CLI usage"] --> C
+    C["Collect & validate<br/>Scripts/*.py"] --> D["AI Usage.app<br/>re-encodes numbers only"]
+  end
+  D -->|"ai-usage-snapshot-v2.json · ≤ 16 KiB"| E[("iCloud Drive<br/>Scriptable folder")]
+  E --> F["Scriptable<br/>AI Usage.js"]
+  F --> G["Home Screen"]
+  F --> H["Lock Screen"]
+```
+
+1. The Mac app runs the collectors every 10 minutes. Each one asks a **signed-in official CLI** for its limits and nothing else.
+2. Results are reduced to an allow-list — service, % used, reset time, balance, observation time — validated, and written atomically to iCloud Drive.
+3. The Scriptable script validates the file again and draws the widgets. If a read fails, it keeps showing the last verified values with their real observation times.
+
+More in [How it works](docs/en/how-it-works.md): the file format, freshness rules, and how Colab grants are detected.
+
+## Configuration
+
+### Widget parameter
+
+Long-press the widget → **Edit Widget** → **Parameter**. Space-separated, all optional:
+
+| Token | Effect |
+|---|---|
+| *(empty)* | Live data |
+| `demo` | Sample data — try the widget without a Mac |
+| `claude` · `codex` · `antigravity` · `colab` | Pin the Lock Screen ring / inline widget to one service (default: whichever has the least left) |
+| `grant=4` | Treat the 4th of each month as Colab’s grant day for this widget |
+| `lang=en` · `ja` · `zh` · `ko` | Force a language (default: the iPhone’s language, English otherwise) |
+
+Examples: `colab` · `demo claude` · `colab grant=15 lang=en`
+
+### Settings file
+
+`iCloud Drive › Scriptable › ai-usage-settings.json` applies to every widget:
 
 ```json
 { "colabGrantDay": 4 }
 ```
 
-| キー | 意味 |
-|---|---|
-| `colabGrantDay` | Colab の計算ユニットが付与される日（毎月何日か、1〜31）。Google AI プランなら Google One の「次回のお支払い」の日が目安です。月にその日がなければ月末日として扱います |
+### Finding the CLIs
 
-## Colab の「次の付与まで」について
-
-公式 CLI は現在の残高しか返さず、付与日や失効日は取得できません。また、Google AI プランの付与は支払い日ちょうどに届かず、数日遅れる例も報告されています。そこで次の順で付与日を決めています。
-
-1. **実績**：Mac は残高を記録するたびに前回と比べ、**10 CU 以上増えていたら「付与」として記録**します（`colab-grants.json`）。付与を一度でも観測していれば、その日を毎月の付与日として使います。
-2. **設定**：まだ観測していなければ `colabGrantDay`（または Parameter の `grant=`）を使います。
-3. **付与待ち**：予定日を過ぎても付与を観測できないときは、日数の代わりに「付与待ち（予定○日）」と表示します。
-
-使い残した CU が付与日に消えるのか繰り越されるのかは、公式には明示されていません（Colab Pro の購入・付与分は 90 日で失効すると案内されています）。表示は「次に補充される日まで」の目安として使ってください。
-
-総量に対する割合（「142.5 / 200 CU」「71%」）は、総量を確認して `colab-allocation.json` を作った場合だけ表示します。作り方は [docs/how-it-works.md](docs/how-it-works.md#colab-の総量と割合) を参照してください。
-
-## プライバシーと安全性
-
-- 各サービスへの問い合わせは、利用者がログインした**公式 CLI** だけで行います。Cookie の読み取り、OAuth トークンの抽出、ブラウザの自動操作はしません。
-- iCloud に書き出すのは、固定のサービス ID・取得元の種類・残り %・回復時刻・残高・観測時刻・付与の観測時刻だけです。受け取った JSON のそれ以外の項目は捨てます。
-- Scriptable のスクリプトは通信 API を使わず、iCloud のファイルを読むだけです。
-- モデルの実行、チャットの送信、購入、枠のリセットといった操作の経路はありません。
-- 残量は Apple の iCloud に保存されます。共有フォルダを出力先にしないでください。
-
-詳細と制約は [docs/security.md](docs/security.md) にまとめています。
-
-## 制限事項
-
-- Mac が起動していてネットにつながっている間だけ値が更新されます。スリープ中は最後の値のまま（古くなるとオレンジ）です。
-- ウィジェットの再描画のタイミングは iOS が決めます。10 分後の更新を要求しますが、保証はされません。
-- 各サービスの CLI の出力形式が変わると取得できなくなることがあります。その場合は推測で埋めず「—」を出します。
-- Claude・Antigravity の取得は第三者ツールの CodexBar を経由します。
-- Mac アプリは公式 CLI を起動するため、App Sandbox を有効にしていません。
-- UI は日本語です。
-
-## 開発
+The collectors look for each CLI in `$AIUSAGE_<NAME>_PATH`, then your `PATH`, then the usual places (`/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/.npm-global/bin`, `~/.bun/bin`, `~/.volta/bin`, the CodexBar app). To pin one:
 
 ```bash
-# テスト
-python3 -m unittest discover -s Tests -p 'test_*.py'
-node --test Tests/*.test.cjs
-swift test
-
-# プロジェクト定義（project.yml）を変えた・Scripts にファイルを足したら作り直す
-xcodegen generate
+launchctl setenv AIUSAGE_CODEX_PATH /path/to/codex   # names: CODEX, CLAUDE, CODEXBAR, AGY, COLAB
 ```
 
-ウィジェットの見た目は、Mac アプリの「ウィジェット」画面で小・中・大とライト/ダークを切り替えてプレビューできます（同梱の描画コードをそのまま使い、通信はしません）。README のスクリーンショットは `Tools/render-screenshots.cjs` で架空データから生成しています。構成と開発メモは [docs/development.md](docs/development.md) を参照してください。
+## Colab: “next grant in N days”
 
-### ネイティブ版（任意・上級者向け）
+The Colab CLI only reports the current balance — no grant date, no expiry. And Google AI plan grants are [known to arrive late](https://github.com/googlecolab/colabtools/issues/6127). So the widget works it out:
 
-Scriptable を使わず、SwiftUI の iPhone アプリと WidgetKit ウィジェットで Mac に直接つなぐ版も同梱しています（`iOS/`、`Widget/`）。Mac とは TLS-PSK で暗号化した接続を Tailscale などのプライベートネットワーク越しに使います。実機に入れるには自分の Apple Developer のチームで署名し、`project.yml` の App Group などを書き換える必要があります。詳しくは [docs/development.md](docs/development.md#ネイティブ版) を参照してください。
+1. **Learned** — every observation is compared with the previous one; a rise of **10 CU or more is recorded as a grant** (`colab-grants.json`, kept on your Mac). Once one is seen, that day of the month is the grant day.
+2. **Configured** — until then, `colabGrantDay` (or `grant=` in the parameter) is used. For Google AI plans, your Google One “next payment” date is a good guess.
+3. **Waiting** — if the expected day passes without a grant being seen, the widget says **“Grant pending (due 4)”** rather than starting a fresh countdown.
 
-## ドキュメント
+Whether unused units expire at the next grant is not documented for Google AI plans (Colab Pro units expire after 90 days), so read it as “when the next top-up arrives”.
 
-| ファイル | 内容 |
+## Everyday commands
+
+| Command | What it does |
 |---|---|
-| [docs/setup.md](docs/setup.md) | セットアップの詳しい手順とつまずきやすい点 |
-| [docs/how-it-works.md](docs/how-it-works.md) | データの流れ、各取得元、鮮度の扱い、Colab の付与検出 |
-| [docs/security.md](docs/security.md) | 認証情報の扱い、iCloud に出るデータ、署名、制約 |
-| [docs/development.md](docs/development.md) | フォルダ構成、テスト、プレビュー、スクリーンショット、ネイティブ版 |
+| `make install` | Build the Mac app, sign it locally, register it as a login item, restart it |
+| `make widget` | Copy the latest widget script to iCloud Drive › Scriptable |
+| `make doctor` | Check CLIs, sign-ins, the Mac app and the export — with fixes |
+| `make test` | Run the Python, JavaScript and Swift test suites |
+| `make screenshots` | Re-render every README image from demo data, in four languages |
+| `make help` | List everything |
 
-各サービスの名称・商標はそれぞれの権利者に帰属します。このプロジェクトは各社の公式製品ではありません。
+## Privacy & security
 
-## ライセンス
+- **Only official CLIs** are asked, using the sign-in you already made. Nothing reads passwords, cookies or OAuth tokens; there is no browser automation.
+- **Only numbers leave the Mac**: service, source type, % used, reset time, balance and observation times. Anything else in a response is dropped before writing.
+- **The widget has no network code.** It only reads the file in iCloud Drive.
+- **No write paths**: there is no code path that starts a chat, runs a model, buys anything or resets a limit.
+- Your iCloud copy lives in your Apple Account. Don’t choose a shared folder.
 
-[MIT](LICENSE)
+Details and limitations: [Security](docs/en/security.md) · Reporting a vulnerability: [SECURITY.md](SECURITY.md)
+
+## FAQ
+
+<details>
+<summary><b>Does this use up my quota or tokens?</b></summary>
+
+No. It only reads the remaining limits. Codex gets the `initialize` handshake and one `account/rateLimits/read`; Claude and Antigravity run their `/usage` command; Colab runs `usage`. No prompts, no model calls.
+</details>
+
+<details>
+<summary><b>Why do I need a Mac?</b></summary>
+
+The official CLIs — and your sign-ins to them — live on your computer. iOS can’t run them. The Mac does the asking; the iPhone only reads a small file.
+</details>
+
+<details>
+<summary><b>Why is a number orange?</b></summary>
+
+Either the limit is low (20% or less) or the value is more than 15 minutes old — usually because the Mac is asleep. Medium and large widgets show how old it is under the service name.
+</details>
+
+<details>
+<summary><b>What does “Awaiting refresh” mean?</b></summary>
+
+The reset time has passed but no new value has arrived yet. The widget won’t assume the limit is back to 100% until the next collection confirms it.
+</details>
+
+<details>
+<summary><b>Can I use only some of the services?</b></summary>
+
+Yes. Connect what you use; the rest show “—”. Colab is optional too.
+</details>
+
+<details>
+<summary><b>Does it work on Intel Macs, or with tools not installed by Homebrew?</b></summary>
+
+Yes. CLIs are found on your `PATH` and in the common install locations; `AIUSAGE_<NAME>_PATH` pins one if needed. `make doctor` shows what was found.
+</details>
+
+<details>
+<summary><b>Which languages are supported?</b></summary>
+
+The widget: English, Japanese, Simplified Chinese and Korean, following the iPhone (or `lang=` in the parameter). The Mac and iPhone apps: English and Japanese, following the system. Documentation: English and Japanese; this README in four languages.
+</details>
+
+<details>
+<summary><b>Is this an official app from Anthropic, OpenAI or Google?</b></summary>
+
+No. It is an independent open-source project that reads the official tools’ own output. Product names belong to their owners.
+</details>
+
+## Troubleshooting
+
+Start with `make doctor` — it names the broken piece and the command that fixes it. Common cases:
+
+| Symptom | Likely cause |
+|---|---|
+| Every value is “—” | Collecting hasn’t started, the Scriptable folder isn’t chosen, or iCloud hasn’t synced yet |
+| One service is “—” | Its CLI isn’t signed in (Claude: finish the first-run setup) |
+| Everything is orange | The Mac is asleep or the app isn’t running |
+| Stopped after updating the app | Run `make install` again; the first time, re-choose the Scriptable folder |
+| The widget doesn’t change | iOS decides when widgets redraw; tap the widget to refresh it |
+
+More in the [setup guide](docs/en/setup.md#troubleshooting).
+
+## Roadmap
+
+- [ ] Signed, notarized Mac app builds on GitHub Releases (no Xcode needed)
+- [ ] More services as their CLIs expose limits
+- [ ] More app languages (the widget already has four)
+- [ ] Optional notifications when a limit drops below a threshold
+
+Ideas and pull requests are welcome.
+
+## Contributing
+
+Bug reports, translations and new services are all welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) — it covers the layout of the code, running the tests and adding a language or a service. Include `python3 Scripts/doctor.py --json` in bug reports.
+
+## Acknowledgements
+
+[Scriptable](https://scriptable.app/) by Simon B. Støvring makes iPhone widgets possible without an App Store app. [CodexBar](https://codexbar.app/) drives the Claude and Antigravity CLIs. [XcodeGen](https://github.com/yonaskolb/XcodeGen) generates the Xcode project.
+
+## License
+
+[MIT](LICENSE). Claude, Codex, Antigravity, Google Colab and related names are trademarks of their respective owners. This project is not affiliated with or endorsed by them.

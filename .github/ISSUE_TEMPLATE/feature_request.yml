@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest an idea or a new service
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+      description: A sketch or mock-up is welcome.
+  - type: textarea
+    id: source
+    attributes:
+      label: For a new service, how can usage be read?
+      description: Name the official CLI command or API that reports usage. Only official, read-only sources can be supported.

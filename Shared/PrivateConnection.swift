@@ -89,8 +89,8 @@ final class SnapshotServer: @unchecked Sendable {
         listener = l
         l.stateUpdateHandler = { [weak self] state in
             switch state {
-            case .ready: self?.stateChanged?("接続待機中")
-            case .failed: self?.stateChanged?("接続を開始できません。IPとTailscaleを確認してください。")
+            case .ready: self?.stateChanged?(String(localized: "Waiting for connections"))
+            case .failed: self?.stateChanged?(String(localized: "Can’t start listening. Check the IP address and your private network (e.g. Tailscale)."))
             default: break
             }
         }

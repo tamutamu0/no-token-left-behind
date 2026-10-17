@@ -3,18 +3,16 @@
 import json
 import os
 import selectors
-import shutil
 import subprocess
 import sys
 import time
-from usage_io import codex_record
+from usage_io import codex_record, find_cli
 
 ALLOWED = {"initialize", "initialized", "account/rateLimits/read"}
 
 
 def collect():
-    cli = next((path for path in ("/opt/homebrew/bin/codex", "/usr/local/bin/codex", shutil.which("codex"))
-                if path and os.path.isfile(path)), None)
+    cli = find_cli("codex")
     if not cli:
         raise RuntimeError("cli unavailable")
     child = subprocess.Popen([cli, "app-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>AI残量</string>
+	<string>AI Usage</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,7 +28,7 @@
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>自分のMacからAIの残量だけを受け取ります。</string>
+	<string>Exchanges AI usage numbers between your own Mac and iPhone.</string>
 	<key>SharedKeychainGroup</key>
 	<string>$(KEYCHAIN_GROUP)</string>
 </dict>

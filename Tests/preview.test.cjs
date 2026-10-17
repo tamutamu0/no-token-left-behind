@@ -15,13 +15,14 @@ test('offline preview runs the shipped widget for every size and appearance with
   const now = 1900000000;
   for (const family of ['small', 'medium', 'large']) {
     for (const appearance of ['light', 'dark']) {
-      for (const snapshot of [context.demo(now), context.empty(now)]) {
-        const result = context.window.renderUsagePreview(snapshot, family, appearance, now);
+      for (const [snapshot, language] of [[context.demo(now), 'en'], [context.empty(now), 'en'], [context.demo(now), 'ja']]) {
+        const result = context.window.renderUsagePreview(snapshot, family, appearance, now, language);
         assert.equal(result.ok, true);
         assert.match(element.innerHTML, /Antigravity/);
         assert.match(element.innerHTML, /Colab/);
         assert.match(element.innerHTML, /CU/);
-        assert.match(element.innerHTML, family === 'small' ? /週間/ : /残り/);
+        const words = language === 'ja' ? { small: /週間/, other: /残り/ } : { small: /Weekly/, other: /Left/ };
+        assert.match(element.innerHTML, family === 'small' ? words.small : words.other);
         assert.doesNotMatch(element.innerHTML, /AI credits|scriptable:\/\/|fixture-secret/);
         assert.match(element.innerHTML, appearance === 'dark' ? /background:#1c1c1e/ : /background:#ffffff/);
       }
