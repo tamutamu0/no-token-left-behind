@@ -247,10 +247,11 @@ test('home (ring style, the default): rings hold both percentages, only reset ti
   assert.ok(s.labels.includes('AG') && s.labels.includes('18日'));
   assert.ok(!s.labels.includes('あと'));
   assert.ok(render(clean(), 'large').labels.includes('2時間'));
-  // A stale service swaps its name for the age, in orange.
+  // A stale service keeps its name (in orange); the oldest age appears once in the corner.
   const old = clean(); old.records[1].observedAt = now - 18 * 60;
   const st = render(old, 'medium');
-  assert.ok(st.labels.includes('18分前') && !st.labels.includes('Codex'));
+  assert.ok(st.labels.includes('Codex'));
+  assert.ok(st.labels.includes('DEMO · 18分前'));
   // A plan without a 5-hour window gets a single ring and one number.
   const noFive = clean(); noFive.records[1].fiveHour = null;
   const nf = render(noFive, 'medium');

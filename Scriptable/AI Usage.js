@@ -663,21 +663,27 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   };
   const record = id => snapshot.records.find(r => r.service === id) || { observedAt: null };
   const stale = r => r.observedAt != null && now - r.observedAt > 900;
-  const hint = snapshot.isDemo ? "DEMO" : status === "syncFailed" || status === "cachedNewer" ? t("syncPending") : "";
   const ids = ["claude", "codex", "antigravity", "colab"];
-  const pad = small ? [10, 9] : large ? [14, 14] : [11, 9];
-  w.setPadding(pad[0], pad[1], pad[0], pad[1]);
-  const size = small ? (hint ? 46 : 50) : large ? 82 : (hint ? 60 : 66);
+  // Names always stay; a stale service turns its name orange, and the age of the oldest value
+  // appears once in the corner (when the Mac sleeps, every service goes stale together).
+  const oldest = ids.map(record).filter(stale).map(r => r.observedAt).sort((a, b) => a - b)[0];
+  const ageText = oldest == null ? "" : (() => {
+    const minutes = Math.floor((now - oldest) / 60);
+    const coarse = minutes < 60 ? minutes : minutes < 1440 ? Math.floor(minutes / 60) * 60 : Math.floor(minutes / 1440) * 1440;
+    return t("ago", { d: duration(coarse, true) });
+  })();
+  const hint = [snapshot.isDemo ? "DEMO" : status === "syncFailed" || status === "cachedNewer" ? t("syncPending") : "", ageText]
+    .filter(Boolean).join(" · ");
+  // Medium keeps a wider leading inset: on devices the 5h/week labels sat right on the edge.
+  const pad = small ? [10, 10, 10, 10] : large ? [14, 14, 14, 14] : [11, 14, 11, 10];
+  w.setPadding(pad[0], pad[1], pad[2], pad[3]);
+  const size = small ? (hint ? 46 : 50) : large ? 82 : (hint ? 58 : 64);
   const lineH = 15, font = 11;
 
-  // A stale column swaps its name for how old the value is ("18m ago"), in orange.
   const name = (parent, id, r, fontSize) => {
     const line = row(parent); line.addSpacer();
-    if (stale(r)) {
-      const minutes = Math.floor((now - r.observedAt) / 60);
-      const coarse = minutes < 60 ? minutes : minutes < 1440 ? Math.floor(minutes / 60) * 60 : Math.floor(minutes / 1440) * 1440;
-      text(line, t("ago", { d: duration(coarse, true) }), fontSize, theme.warning, "semibold", 0.6);
-    } else text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, theme.secondary, "regular", 0.6);
+    text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, stale(r) ? theme.warning : theme.secondary,
+      stale(r) ? "semibold" : "regular", 0.6);
     line.addSpacer();
   };
   // "in 2h" with the time in bold: the localized pattern's text around {d} stays secondary.
@@ -787,13 +793,13 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
 
   // Medium: the window labels appear once, at the left edge of the two reset lines.
   if (hint) { const h = row(w); h.addSpacer(); text(h, hint, 8, theme.warning, "semibold"); w.addSpacer(2); }
-  const colW = 72, colH = 14 + 5 + size + 7 + lineH * 2;
+  const colW = 70, colH = 14 + 5 + size + 7 + lineH * 2;
   w.addSpacer();
   const main = row(w);
-  const side = box(main, 22, colH); side.addSpacer();
+  const side = box(main, 20, colH); side.addSpacer();
   const hasFiveHour = ["claude", "codex", "antigravity"].some(id => record(id).fiveHour != null);
   for (const label of [hasFiveHour ? t("fiveShort") : "", t("weekShort")]) {
-    const l = row(side); l.size = new Size(22, lineH); text(l, label, font, theme.secondary, "semibold", 0.5); l.addSpacer();
+    const l = row(side); l.size = new Size(20, lineH); text(l, label, font, theme.secondary, "semibold", 0.5); l.addSpacer();
   }
   ids.forEach(id => {
     main.addSpacer();
