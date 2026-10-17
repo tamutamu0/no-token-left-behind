@@ -4,7 +4,7 @@
 //   node Tools/render-screenshots.cjs [repo-root] [out-dir]
 //
 // For every language (en, ja, zh, ko) it writes <out-dir>/<lang>/{hero,light,dark,lock,anatomy}.png,
-// plus <out-dir>/social-preview.png (the English hero, sized for GitHub's social preview).
+// plus <out-dir>/social-preview.png (the English hero at 1280×640, under GitHub's 1 MB limit).
 // It uses the shipped widget code with the same Scriptable shim as the Mac preview, and
 // headless Google Chrome for the pixels (set CHROME=/path/to/chrome to override).
 const fs = require('fs');
@@ -128,5 +128,8 @@ for (const lang of languages) {
     console.log(path.relative(root, out));
   }
 }
-fs.copyFileSync(path.join(outDir, 'en', 'hero.png'), path.join(outDir, 'social-preview.png'));
+// GitHub's social preview must stay under 1 MB, so it is rendered at 1x (1280×640).
+execFileSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1',
+  `--user-data-dir=${path.join(os.tmpdir(), 'ai-usage-chrome')}`, '--window-size=1280,640',
+  `--screenshot=${path.join(outDir, 'social-preview.png')}`, `file://${html}?m=hero&lang=en`], { stdio: 'ignore' });
 console.log(path.relative(root, path.join(outDir, 'social-preview.png')));
