@@ -88,6 +88,20 @@ test('settings are downloaded from iCloud before reading; only known values are 
   cloud.delete('/cloud/ai-usage-settings.json');
   assert.deepEqual(JSON.parse(JSON.stringify(await api.loadSettings())), {});
 });
+test('a failed iCloud download still reads the local copy; a real failure carries its reason', async () => {
+  const current = Math.floor(Date.now() / 1000);
+  const live = clean(); live.isDemo = false; live.generatedAt = current - 5;
+  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; r.observedAt = current - 60; }
+  const cloud = new Map([['/cloud/ai-usage-snapshot-v2.json', JSON.stringify(live)]]);
+  const fm = fileManager(cloud); fm.downloadFileFromiCloud = async () => { throw new Error('offline'); };
+  context.FileManager = { local: () => fileManager(new Map()), iCloud: () => fm };
+  let result = await api.loadSnapshot(false);
+  assert.equal(result.status, 'live');
+  cloud.set('/cloud/ai-usage-snapshot-v2.json', '{broken');
+  result = await api.loadSnapshot(false);
+  assert.equal(result.status, 'syncFailed');
+  assert.ok(result.reason && result.reason.length <= 200);
+});
 test('iCloud failure retains old observation and cloud demo cannot replace live cache', async () => {
   const current = Math.floor(Date.now()/1000);
   const live = clean(); live.isDemo = false; live.generatedAt = current - 5;

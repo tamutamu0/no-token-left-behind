@@ -164,7 +164,8 @@ async function loadSnapshot(useDemo) {
     let path = cloud.joinPath(cloud.documentsDirectory(), SNAPSHOT_FILE);
     if (!cloud.fileExists(path)) path = cloud.joinPath(cloud.documentsDirectory(), "ai-usage-snapshot.json");
     if (!cloud.fileExists(path)) return { snapshot, status: "waitingForMac" };
-    await cloud.downloadFileFromiCloud(path);
+    // A failed download is not fatal: an already-downloaded copy can still be read and validated.
+    try { await cloud.downloadFileFromiCloud(path); } catch (_) { /* fall through to the local copy */ }
     const kb = cloud.fileSize(path);
     if (typeof kb !== "number" || kb > MAX_KB) throw new Error("Size");
     const next = normalizeSnapshot(JSON.parse(cloud.readString(path)));
@@ -175,8 +176,9 @@ async function loadSnapshot(useDemo) {
     snapshot = next;
     local.writeString(cache, JSON.stringify(next));
     return { snapshot, status: "live" };
-  } catch (_) {
-    return { snapshot, status: "syncFailed" };
+  } catch (error) {
+    // The reason is shown only when the script is run inside Scriptable (never in the widget).
+    return { snapshot, status: "syncFailed", reason: String(error && error.message || error).slice(0, 200) };
   }
 }
 
@@ -713,15 +715,19 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
     }
     s.backgroundImage = drawRings(size, rings);
     s.addSpacer();
-    const t1 = row(s); t1.bottomAlignContent();
+    // On a device a row stretches across the ring and starts at its leading edge, so the
+    // numbers are centred with a flexible spacer on each side.
+    const t1 = row(s); t1.bottomAlignContent(); t1.addSpacer();
     text(t1, top == null ? "—" : String(typeof top === "number" ? Math.round(top) : top), main, theme.text, "number", 0.6);
     if (top != null && unit) { t1.addSpacer(1); text(t1, unit, Math.round(main * 0.55), theme.secondary, "number"); }
+    t1.addSpacer();
     if (bottom != null) {
-      const t2 = row(s); t2.bottomAlignContent();
+      const t2 = row(s); t2.bottomAlignContent(); t2.addSpacer();
       if (typeof bottom === "number") {
         text(t2, String(Math.round(bottom)), sub, theme.secondary, "number");
         t2.addSpacer(1); text(t2, "%", Math.round(sub * 0.75), theme.secondary, "number");
       } else text(t2, bottom, sub - 1, theme.secondary, "regular", 0.6);
+      t2.addSpacer();
     }
     s.addSpacer();
   };
@@ -784,10 +790,10 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   const colW = 72, colH = 14 + 5 + size + 7 + lineH * 2;
   w.addSpacer();
   const main = row(w);
-  const side = box(main, 16, colH); side.addSpacer();
+  const side = box(main, 22, colH); side.addSpacer();
   const hasFiveHour = ["claude", "codex", "antigravity"].some(id => record(id).fiveHour != null);
   for (const label of [hasFiveHour ? t("fiveShort") : "", t("weekShort")]) {
-    const l = row(side); l.size = new Size(16, lineH); text(l, label, font, theme.secondary, "semibold"); l.addSpacer();
+    const l = row(side); l.size = new Size(22, lineH); text(l, label, font, theme.secondary, "semibold", 0.5); l.addSpacer();
   }
   ids.forEach(id => {
     main.addSpacer();
@@ -815,6 +821,7 @@ const settings = options.demo ? {} : await loadSettings();
 const grantDay = options.grantDay || settings.colabGrantDay || null;
 const style = options.style || settings.style || "rings";
 const widget = buildWidget(result.snapshot, result.status, family, Date.now() / 1000, args.widgetParameter, grantDay, style);
+if (!config.runsInWidget && result.reason) console.log(`Couldn’t read ${SNAPSHOT_FILE}: ${result.reason}`);
 Script.setWidget(widget);
 if (!config.runsInWidget) await widget.presentMedium();
 Script.complete();
