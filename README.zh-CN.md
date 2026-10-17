@@ -133,7 +133,7 @@ make doctor
 | | |
 |---|---|
 | **iPhone** | 锁屏小组件需 iOS 16 及以上 · [Scriptable](https://apps.apple.com/app/scriptable/id1405459188)（免费）· iCloud 云盘 |
-| **Mac** | macOS 14 及以上（Apple 芯片或 Intel）· 用于构建的 Xcode · 同一 Apple 账户的 iCloud 云盘 |
+| **Mac** | macOS 14 及以上（Apple 芯片或 Intel）· 用于构建的 Xcode 16 及以上 · 同一 Apple 账户的 iCloud 云盘 |
 | **Codex** | 已登录的官方 [Codex CLI](https://github.com/openai/codex) |
 | **Claude** | 已登录并完成首次设置的官方 [Claude Code](https://code.claude.com/) CLI · [CodexBar](https://codexbar.app/) |
 | **Antigravity** | 已登录的官方 Antigravity CLI · CodexBar |

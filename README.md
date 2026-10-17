@@ -148,7 +148,7 @@ The [setup guide](docs/en/setup.md) walks through every step with the details th
 | | |
 |---|---|
 | **iPhone** | iOS 16 or later for Lock Screen widgets · [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) (free) · iCloud Drive |
-| **Mac** | macOS 14 or later (Apple silicon or Intel) · Xcode to build · iCloud Drive on the same Apple Account |
+| **Mac** | macOS 14 or later (Apple silicon or Intel) · Xcode 16 or later to build · iCloud Drive on the same Apple Account |
 | **Codex** | Official [Codex CLI](https://github.com/openai/codex), signed in |
 | **Claude** | Official [Claude Code](https://code.claude.com/) CLI, signed in and past first-run setup · [CodexBar](https://codexbar.app/) |
 | **Antigravity** | Official Antigravity CLI, signed in · CodexBar |

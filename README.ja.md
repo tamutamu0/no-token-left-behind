@@ -148,7 +148,7 @@ iPhone
 | | |
 |---|---|
 | **iPhone** | ロック画面ウィジェットには iOS 16 以降 · [Scriptable](https://apps.apple.com/app/scriptable/id1405459188)（無料） · iCloud Drive |
-| **Mac** | macOS 14 以降（Apple シリコン / Intel） · ビルド用の Xcode · 同じ Apple アカウントの iCloud Drive |
+| **Mac** | macOS 14 以降（Apple シリコン / Intel） · ビルド用の Xcode 16 以降 · 同じ Apple アカウントの iCloud Drive |
 | **Codex** | 公式 [Codex CLI](https://github.com/openai/codex) にログイン済み |
 | **Claude** | 公式 [Claude Code](https://code.claude.com/) CLI にログイン済み（初回セットアップ完了） · [CodexBar](https://codexbar.app/) |
 | **Antigravity** | 公式 Antigravity CLI にログイン済み · CodexBar |

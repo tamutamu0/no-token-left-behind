@@ -17,7 +17,7 @@ This guide covers every step: collect usage on the Mac, write it to iCloud Drive
 ## 0. Before you start
 
 - A Mac and an iPhone signed in to the same Apple Account, with iCloud Drive turned on for both.
-- Mac: macOS 14 or later and Xcode. You do not need a paid Apple Developer membership.
+- Mac: macOS 14 or later and Xcode 16 or later. You do not need a paid Apple Developer membership.
 - iPhone: [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) (free). Lock Screen widgets need iOS 16 or later.
 - The official CLI for each service you want to show, already signed in. You can skip any service you don't use.
 

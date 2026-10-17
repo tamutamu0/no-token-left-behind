@@ -133,7 +133,7 @@ make doctor
 | | |
 |---|---|
 | **iPhone** | 잠금 화면 위젯은 iOS 16 이상 · [Scriptable](https://apps.apple.com/app/scriptable/id1405459188)(무료) · iCloud Drive |
-| **Mac** | macOS 14 이상(Apple 실리콘 또는 Intel) · 빌드용 Xcode · 같은 Apple 계정의 iCloud Drive |
+| **Mac** | macOS 14 이상(Apple 실리콘 또는 Intel) · 빌드용 Xcode 16 이상 · 같은 Apple 계정의 iCloud Drive |
 | **Codex** | 로그인된 공식 [Codex CLI](https://github.com/openai/codex) |
 | **Claude** | 로그인 및 첫 실행 설정을 마친 공식 [Claude Code](https://code.claude.com/) CLI · [CodexBar](https://codexbar.app/) |
 | **Antigravity** | 로그인된 공식 Antigravity CLI · CodexBar |

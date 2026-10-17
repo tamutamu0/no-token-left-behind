@@ -17,7 +17,7 @@ Mac で残量を集めて iCloud Drive に書き出し、iPhone の Scriptable �
 ## 0. 先に用意するもの
 
 - 同じ Apple アカウントでサインインした Mac と iPhone。両方で iCloud Drive を有効にしておきます。
-- Mac：macOS 14 以降と Xcode。有料の Apple Developer 登録は不要です。
+- Mac：macOS 14 以降と Xcode 16 以降。有料の Apple Developer 登録は不要です。
 - iPhone：[Scriptable](https://apps.apple.com/app/scriptable/id1405459188)（無料）。ロック画面ウィジェットには iOS 16 以降が必要です。
 - 表示したいサービスの公式 CLI へのログイン。使わないサービスは飛ばして構いません。
 

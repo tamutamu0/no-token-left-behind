@@ -18,7 +18,7 @@ make test          # Python + JavaScript + Swift
 make build         # the Mac app
 ```
 
-You need Xcode, Python 3.9+ and Node 20+. [XcodeGen](https://github.com/yonaskolb/XcodeGen) is needed only if you change `project.yml` or add files (`make project`).
+You need Xcode 16 or later, Python 3.9+ and Node 20+. [XcodeGen](https://github.com/yonaskolb/XcodeGen) is needed only if you change `project.yml` or add files (`make project`).
 
 See [Development](docs/en/development.md) for the code layout, the preview shim and the layout rules.
 
