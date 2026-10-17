@@ -93,7 +93,7 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 - One **column** per service. The **outer ring** is the 5-hour window, the **inner ring** (a lighter tone) is the week.
 - Inside the ring: the **big number** is the 5-hour % left, the **small one** the weekly % left.
 - Below the ring: **when each one resets**. The `5h` / `wk` labels at the left edge name the two lines once for every column.
-- A plan without a 5-hour window gets a **single ring** and one number — no dash, no empty ring.
+- A plan without a 5-hour window keeps the **same two-ring shape**: the outer track stays empty and the weekly value sits on the inner ring, marked “wk” — no dash.
 - **Colab** is a balance, not a window: compute units left in the ring, and the days until the next grant below.
 - When values are more than 15 minutes old, the age of the oldest one appears once in the corner, in **orange** (“18m ago”).
 

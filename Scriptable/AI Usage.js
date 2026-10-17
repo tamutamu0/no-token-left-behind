@@ -722,10 +722,17 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
     } else {
       const five = r.fiveHour ? remaining(r.fiveHour, now) : undefined;
       const week = r.weekly ? remaining(r.weekly, now) : undefined;
-      const shown = [five, week].filter(v => v !== undefined);
-      rings = shown.length ? shown.map((value, i) => ({ value, color: colors[i] })) : [{ value: null, color: colors[0] }];
-      top = shown.length ? shown[0] : null;
-      if (shown.length === 2) bottom = week == null ? "—" : week;
+      if (five === undefined && week !== undefined) {
+        // No 5-hour window on this plan: keep the same two-ring shape (an empty outer track) and
+        // put the weekly value on the inner ring, in the weekly tone, labelled as weekly.
+        rings = [{ value: null, color: colors[0] }, { value: week, color: colors[1] }];
+        top = week; bottom = t("weekShort");
+      } else {
+        const shown = [five, week].filter(v => v !== undefined);
+        rings = shown.length ? shown.map((value, i) => ({ value, color: colors[i] })) : [{ value: null, color: colors[0] }];
+        top = shown.length ? shown[0] : null;
+        if (shown.length === 2) bottom = week == null ? "—" : week;
+      }
     }
     s.backgroundImage = drawRings(size, rings);
     s.addSpacer();

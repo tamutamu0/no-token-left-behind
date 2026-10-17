@@ -252,11 +252,14 @@ test('home (ring style, the default): rings hold both percentages, only reset ti
   const st = render(old, 'medium');
   assert.ok(st.labels.includes('Codex'));
   assert.ok(st.labels.includes('DEMO · 18分前'));
-  // A plan without a 5-hour window gets a single ring and one number.
+  // A plan without a 5-hour window keeps the two-ring shape: an empty outer track and the weekly
+  // value on the inner ring, in the weekly tone, labelled as weekly.
   const noFive = clean(); noFive.records[1].fiveHour = null;
   const nf = render(noFive, 'medium');
-  assert.equal(ringOf(nf, '10A37F').filter(op => op.hex === '8e8e93').length, 1);
-  assert.ok(!nf.labels.includes('25'));
+  const codex = ringOf(nf, '7DD3BB');
+  assert.equal(codex.filter(op => op.hex === '8e8e93').length, 2);
+  assert.ok(!codex.some(op => op.hex === '10A37F'));
+  assert.ok(!nf.labels.includes('25') && nf.labels.includes('81'));
   // The table style stays available per widget (parameter) or globally (style argument).
   assert.ok(render(clean(), 'medium', 'table').labels.includes('5時間'));
   assert.ok(render(clean(), 'medium', '', 'table').labels.includes('5時間'));
