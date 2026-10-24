@@ -43,6 +43,8 @@ class DrawContext {
   getImage() { return { drawing: true, size: this.size, ops: this.ops }; }
 }
 class Size { constructor(width, height) { this.width = width; this.height = height; } }
+// SF Symbols the widget uses, drawn as inline SVG.
+const SFSymbol = { named: name => ({ image: { symbol: name, size: new Size(24, 24) }, applyFont() {} }) };
 const previewFont = (size, weight = 400, rounded = false) => ({ size, weight, rounded });
 const Font = { systemFont: n => previewFont(n), semiboldSystemFont: n => previewFont(n, 600),
   semiboldRoundedSystemFont: n => previewFont(n, 600, true) };
@@ -61,6 +63,10 @@ function previewMarkup(node, appearance, parentDirection = 'column') {
       : `<text x="${op.align === 'center' ? op.rect.x + op.rect.width / 2 : op.rect.x}" y="${op.rect.y + op.rect.height * 0.8}" text-anchor="${op.align === 'center' ? 'middle' : 'start'}" font-size="${op.font.size}" font-weight="${op.font.weight}" fill="${color(op.color)}" font-family="${op.font.rounded ? 'ui-rounded,' : ''}-apple-system,BlinkMacSystemFont,sans-serif">${escapePreviewText(op.text)}</text>`).join('');
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${img.size.width} ${img.size.height}" style="${style}">${body}</svg>`;
   };
+  if (node.type === 'image' && node.img.symbol) {
+    const w = node.imageSize?.width || 12, h = node.imageSize?.height || 12;
+    return `<svg width="${w}" height="${h}" viewBox="0 0 24 24" style="flex-shrink:0;display:block"><path fill="${color(node.tintColor)}" d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/></svg>`;
+  }
   if (node.type === 'image') {
     const { size } = node.img;
     return drawing(node.img, node.imageSize?.width || size.width, node.imageSize?.height || size.height, 'flex-shrink:0;display:block');

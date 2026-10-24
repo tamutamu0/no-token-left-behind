@@ -98,7 +98,38 @@ def codex_record(raw):
                 five_hour = quota
             elif duration == 10080:
                 weekly = quota
-    return record("codex", "codexAppServer", five_hour, weekly)
+    result = record("codex", "codexAppServer", five_hour, weekly)
+    credits = reset_credits(raw.get("rateLimitResetCredits"))
+    if credits is not None and result["observedAt"] is not None:
+        result["resetCredits"] = credits
+    return result
+
+
+def reset_credits(raw, now=None):
+    """Banked Codex rate-limit resets: how many are usable and when the next one expires.
+
+    Only the count and the earliest expiry are kept — never credit IDs, titles or descriptions.
+    """
+    if not isinstance(raw, dict):
+        return None
+    now = time.time() if now is None else now
+    credits = raw.get("credits")
+    if isinstance(credits, list):
+        expiries = []
+        for credit in credits:
+            if not isinstance(credit, dict) or credit.get("status") != "available":
+                continue
+            expires = credit.get("expiresAt")
+            if isinstance(expires, bool) or not isinstance(expires, (int, float)):
+                expiries.append(None)
+            elif expires > now:
+                expiries.append(float(expires))
+        dated = sorted(e for e in expiries if e is not None)
+        return {"count": min(len(expiries), 99), "nextExpiresAt": dated[0] if dated else None}
+    count = raw.get("availableCount")
+    if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+        return None
+    return {"count": min(count, 99), "nextExpiresAt": None}
 
 
 def antigravity_record(raw):

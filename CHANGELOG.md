@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Banked Codex rate-limit resets: a ticket badge after “Codex” shows how many are left, turns orange when one expires within a week, and the large widget shows the date. Read from the same official `account/rateLimits/read` call; only the count and earliest expiry are kept.
 - Ring style for Home Screen widgets, now the default: outer ring 5-hour, inner ring weekly, both percentages inside and reset times below, in colors that evoke each tool. The table style stays available with `table` in the Parameter or `"style": "table"` in `ai-usage-settings.json`. The Mac app preview can switch between them.
 - New name: **No Token Left Behind** (formerly AI Usage Widget). Hero banner and social preview image for every language.
 - English is now the default. The widget is available in English, Japanese, Simplified Chinese and Korean, following the iPhone's language or `lang=` in the Parameter. The Mac and iOS apps are available in English and Japanese through String Catalogs.

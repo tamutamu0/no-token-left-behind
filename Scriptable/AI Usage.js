@@ -19,7 +19,7 @@ const I18N = {
     computeUnits: "Compute units", used: "Used {v} CU", grantIn: "Next grant in {n} days",
     grantTomorrow: "Next grant tomorrow", grantWaiting: "Grant pending (due {d})", grantShort: "{n}d",
     grantShortWaiting: "Pending", inlineGrant: "grant in {n}d", inlineWaiting: "grant pending",
-    ringLegend: "Outer 5h · inner weekly", grantUntil: "Next grant",
+    ringLegend: "Outer 5h · inner weekly", ticketUntil: "until {d}", grantUntil: "Next grant",
     units: { d: "d", h: "h", m: "m", sep: " " }, unitsShort: { d: "d", h: "h", m: "m", sep: "" }
   },
   ja: {
@@ -29,7 +29,7 @@ const I18N = {
     computeUnits: "計算ユニット", used: "消費 {v} CU", grantIn: "次の付与まで あと{n}日",
     grantTomorrow: "次の付与 明日", grantWaiting: "付与待ち（予定{d}日）", grantShort: "あと{n}日",
     grantShortWaiting: "付与待ち", inlineGrant: "付与まで{n}日", inlineWaiting: "付与待ち",
-    ringLegend: "外 5時間 ・ 内 週", grantUntil: "付与まで",
+    ringLegend: "外 5時間 ・ 内 週", ticketUntil: "{d}まで", grantUntil: "付与まで",
     units: { d: "日", h: "時間", m: "分", sep: "" }, unitsShort: { d: "日", h: "h", m: "m", sep: "", only: "分" }
   },
   zh: {
@@ -39,7 +39,7 @@ const I18N = {
     computeUnits: "计算单元", used: "已用 {v} CU", grantIn: "距下次发放 {n} 天",
     grantTomorrow: "明天发放", grantWaiting: "等待发放（预计{d}日）", grantShort: "{n}天",
     grantShortWaiting: "待发放", inlineGrant: "{n}天后发放", inlineWaiting: "待发放",
-    ringLegend: "外圈 5小时 · 内圈 每周", grantUntil: "距发放",
+    ringLegend: "外圈 5小时 · 内圈 每周", ticketUntil: "{d}前", grantUntil: "距发放",
     units: { d: "天", h: "小时", m: "分钟", sep: "" }, unitsShort: { d: "天", h: "h", m: "m", sep: "", only: "分钟" }
   },
   ko: {
@@ -49,7 +49,7 @@ const I18N = {
     computeUnits: "컴퓨팅 단위", used: "{v} CU 사용", grantIn: "다음 지급까지 {n}일",
     grantTomorrow: "내일 지급", grantWaiting: "지급 대기 ({d}일 예정)", grantShort: "{n}일",
     grantShortWaiting: "지급 대기", inlineGrant: "{n}일 후 지급", inlineWaiting: "지급 대기",
-    ringLegend: "바깥 5시간 · 안쪽 주간", grantUntil: "다음 지급",
+    ringLegend: "바깥 5시간 · 안쪽 주간", ticketUntil: "{d}까지", grantUntil: "다음 지급",
     units: { d: "일", h: "시간", m: "분", sep: " " }, unitsShort: { d: "일", h: "h", m: "m", sep: "", only: "분" }
   }
 };
@@ -111,8 +111,17 @@ function normalizeSnapshot(raw, now = Date.now() / 1000) {
           r.source !== (raw.isDemo ? "demo" : "colabCli")) return invalid();
       lastGrantAt = r.lastGrantAt;
     }
+    let resetCredits = null;
+    if (r.resetCredits != null) {
+      const c = r.resetCredits;
+      if (r.service !== "codex" || r.source !== (raw.isDemo ? "demo" : "codexAppServer") || r.observedAt == null ||
+          !Number.isInteger(c.count) || c.count < 0 || c.count > 99 ||
+          (c.nextExpiresAt != null && !number(c.nextExpiresAt, Number.MIN_VALUE, now + 400 * 86400)) ||
+          (c.count === 0 && c.nextExpiresAt != null)) return invalid();
+      resetCredits = { count: c.count, nextExpiresAt: c.nextExpiresAt == null ? null : c.nextExpiresAt };
+    }
     return { service: r.service, source: r.source, observedAt: r.observedAt == null ? null : r.observedAt,
-      fiveHour, weekly, balance, balanceAllocation, lastGrantAt };
+      fiveHour, weekly, balance, balanceAllocation, lastGrantAt, resetCredits };
   });
   // An allowlist strips any token, email or unexpected field before local caching.
   return { version: 1, generatedAt: raw.generatedAt, isDemo: raw.isDemo, records };
@@ -125,7 +134,8 @@ function demoSnapshot(now = Date.now() / 1000) {
   const q = (usedPercent, seconds) => ({ usedPercent, resetsAt: now + seconds });
   return { version: 1, generatedAt: now, isDemo: true, records: [
     { service: "claude", source: "demo", observedAt: now, fiveHour: q(28,7200), weekly: q(62,259200) },
-    { service: "codex", source: "demo", observedAt: now, fiveHour: q(75,3600), weekly: q(19,432000) },
+    { service: "codex", source: "demo", observedAt: now, fiveHour: q(75,3600), weekly: q(19,432000),
+      resetCredits: { count: 2, nextExpiresAt: now + 5 * 86400 } },
     { service: "antigravity", source: "demo", observedAt: now, fiveHour: q(10,14400), weekly: q(36,345600) },
     { service: "colab", source: "demo", observedAt: now, balance: 142.5, balanceAllocation: { total: 200, basis: "demo" } }
   ] };
@@ -536,6 +546,8 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
       const r = record(id), isStale = stale(r);
       const title = row(w); title.size = new Size(m.width, 0); dot(title, id);
       text(title, name, m.name, isStale ? theme.warning : theme.secondary, "semibold", 0.7);
+      const badge = resetBadge(r, now);
+      if (badge) addResetBadge(title, badge, m.name - 1, theme, false);
       title.addSpacer();
       w.addSpacer(1);
       const line = row(w); line.size = new Size(m.width, 0);
@@ -571,6 +583,8 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
       const label = column(line, m.label);
       const title = row(label); dot(title, id);
       text(title, name, m.name, theme.text, "semibold", 0.7);
+      const badge = resetBadge(r, now);
+      if (badge) addResetBadge(title, badge, m.name - 2, theme, large);
       // Only exceptional states get a caption under the name: a stale or manual observation.
       if (r.observedAt != null && (isStale || r.source === "manual")) {
         label.addSpacer(1);
@@ -620,6 +634,31 @@ function buildWidget(snapshot, status, family, now = Date.now() / 1000, paramete
 // Colors evoke each tool's own brand; the inner ring is a lighter tone of the same hue.
 const RING_COLORS = { claude: ["D97757", "EDB49C"], codex: ["10A37F", "7DD3BB"],
   antigravity: ["5B7CFA", "A9B9FF"], colab: ["F9AB00"] };
+
+// Banked Codex resets still usable: the count, whether the earliest expires within a week, and
+// its date ("Oct 30" / "10/30"). Nothing once that expiry has passed (the data is stale then).
+function resetBadge(record, now) {
+  const c = record && record.resetCredits;
+  if (!c || c.count < 1 || (c.nextExpiresAt != null && c.nextExpiresAt <= now)) return null;
+  const at = c.nextExpiresAt == null ? null : new Date(c.nextExpiresAt * 1000);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const date = at ? (LANG === "en" ? `${months[at.getMonth()]} ${at.getDate()}` : `${at.getMonth() + 1}/${at.getDate()}`) : null;
+  return { count: c.count, soon: c.nextExpiresAt != null && c.nextExpiresAt - now <= 7 * 86400,
+    until: date ? t("ticketUntil", { d: date }) : null };
+}
+// A ticket symbol and the count, after the service name; orange when one expires within a week.
+function addResetBadge(line, badge, size, theme, withDate) {
+  const color = badge.soon ? theme.warning : theme.secondary;
+  line.addSpacer(3);
+  const symbol = SFSymbol.named("ticket.fill");
+  symbol.applyFont(Font.systemFont(size));
+  const icon = line.addImage(symbol.image);
+  icon.imageSize = new Size(size + 1, size + 1); icon.tintColor = color;
+  line.addSpacer(2);
+  const label = withDate && badge.until ? `${badge.count} · ${badge.until}` : String(badge.count);
+  const text = line.addText(label);
+  text.font = Font.semiboldSystemFont(size); text.textColor = color; text.lineLimit = 1; text.minimumScaleFactor = 0.6;
+}
 
 // Rings only (no text, so the numbers on top can follow light and dark mode). The neutral gray
 // track reads on both backgrounds.
@@ -686,6 +725,8 @@ function buildRingWidget(snapshot, status, family, now, grantDay) {
   const name = (parent, id, fontSize) => {
     const line = row(parent); line.addSpacer();
     text(line, small ? SHORT_NAMES[id] : SERVICE_NAMES[id], fontSize, theme.secondary, "regular", 0.6);
+    const badge = resetBadge(record(id), now);
+    if (badge) addResetBadge(line, badge, fontSize - 1, theme, large);
     line.addSpacer();
   };
   // "in 2h" with the time in bold: the localized pattern's text around {d} stays secondary.

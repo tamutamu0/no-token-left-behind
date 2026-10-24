@@ -74,6 +74,7 @@ CLI の場所は `Scripts/usage_io.py` の `find_cli` で探します（`$AIUSAG
 | `balance` | Colab の残り計算ユニット |
 | `balanceAllocation` | 確認済みの総量（[後述](#colab-の総量と割合)） |
 | `lastGrantAt` | Colab の付与を最後に観測した時刻（[後述](#colab-の付与の検出)） |
+| `resetCredits` | Codex のみ。使えるリセット券の枚数 `count` と、いちばん近い有効期限 `nextExpiresAt`。券の ID や説明文は捨てる |
 
 Mac（Python と Swift）と Scriptable の両方で、型・範囲・組み合わせを検証します。たとえば Colab に 5 時間枠が付いている、観測時刻が未来すぎる、同じサービスが 2 回ある、といったファイルは採用しません。一覧にない項目は再エンコードの時点で捨てます。
 

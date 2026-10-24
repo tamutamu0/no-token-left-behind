@@ -74,6 +74,7 @@ CLIs are located with `find_cli` in `Scripts/usage_io.py` (`$AIUSAGE_<NAME>_PATH
 | `balance` | Colab compute units left |
 | `balanceAllocation` | A confirmed total (see [below](#colab-total-and-percentage)) |
 | `lastGrantAt` | The last time a Colab grant was observed (see [below](#colab-grant-detection)) |
+| `resetCredits` | Codex only: `count` of banked rate-limit resets still usable and `nextExpiresAt`, the earliest expiry. Credit IDs and text are dropped |
 
 Both the Mac (Python and Swift) and Scriptable check types, ranges and combinations. For example, they reject Colab with a 5-hour window, an observation time far in the future, or the same service listed twice. Fields that aren't on the list are dropped when the snapshot is re-encoded.
 

@@ -95,6 +95,7 @@ How it works, in one breath: your Mac already has the official CLIs signed in. E
 - Below the ring: **when each one resets**. The `5h` / `wk` labels at the left edge name the two lines once for every column.
 - A plan without a 5-hour window keeps the **same two-ring shape**: the outer track stays empty and the weekly value sits on the inner ring, marked “wk” — no dash.
 - **Colab** is a balance, not a window: compute units left in the ring, and the days until the next grant below.
+- A **ticket** after “Codex” counts your banked rate-limit resets (they expire 30 days after they are granted). It turns **orange** when one expires within a week; the large widget also shows the date.
 - When values are more than 15 minutes old, the age of the oldest one appears once in the corner, in **orange** (“18m ago”).
 
 ## Gallery
@@ -278,7 +279,7 @@ Whether unused units expire at the next grant is not documented for Google AI pl
 ## Privacy & security
 
 - **Only official CLIs** are asked, using the sign-in you already made. Nothing reads passwords, cookies or OAuth tokens; there is no browser automation.
-- **Only numbers leave the Mac**: service, source type, % used, reset time, balance and observation times. Anything else in a response is dropped before writing.
+- **Only numbers leave the Mac**: service, source type, % used, reset time, balance, observation times, and the number of banked Codex resets with the earliest expiry. Anything else in a response is dropped before writing.
 - **The widget has no network code.** It only reads the file in iCloud Drive.
 - **No write paths**: there is no code path that starts a chat, runs a model, buys anything or resets a limit.
 - Your iCloud copy lives in your Apple Account. Don’t choose a shared folder.

@@ -72,6 +72,23 @@ final class UsageCoreTests: XCTestCase {
         XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("email"))
     }
 
+    func testResetCreditsSurviveOnlyOnTheOfficialCodexRecord() throws {
+        let now = Date().timeIntervalSince1970
+        func snapshot(_ service: String, _ source: String, _ credits: String) -> Data {
+            Data("""
+            {"version":1,"generatedAt":\(now),"isDemo":false,"records":[{"service":"\(service)","source":"\(source)",
+             "observedAt":\(now),"weekly":{"usedPercent":10,"resetsAt":\(now + 60)},"resetCredits":\(credits)}]}
+            """.utf8)
+        }
+        let ok = try UsageSnapshot.decode(snapshot("codex", "codexAppServer", #"{"count":2,"nextExpiresAt":\#(now + 86400),"id":"fixture-secret"}"#))
+        XCTAssertEqual(ok.record(.codex).resetCredits?.count, 2)
+        XCTAssertFalse(String(decoding: try ok.encoded(), as: UTF8.self).contains("fixture-secret"))
+        XCTAssertThrowsError(try UsageSnapshot.decode(snapshot("claude", "claudeCli", #"{"count":1,"nextExpiresAt":null}"#)))
+        XCTAssertThrowsError(try UsageSnapshot.decode(snapshot("codex", "codexAppServer", #"{"count":100,"nextExpiresAt":null}"#)))
+        XCTAssertThrowsError(try UsageSnapshot.decode(snapshot("codex", "codexAppServer", #"{"count":0,"nextExpiresAt":\#(now + 10)}"#)))
+        XCTAssertNotNil(UsageSnapshot.demo().record(.codex).resetCredits)
+    }
+
     func testRejectsPublicPairingAndWeakKeys() {
         let key = Data(repeating: 17, count: 32).base64EncodedString()
         for host in ["8.8.8.8", "example.com", "100.63.1.1", "192.168.1.256", "127.0.0.1", "10.1.2.3/", "10.1.2.3\n"] {

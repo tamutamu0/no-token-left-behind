@@ -47,6 +47,12 @@ struct BalanceAllocation: Codable, Equatable {
     let basis: Basis
 }
 
+/// Banked Codex rate-limit resets: how many are usable and when the earliest one expires.
+struct ResetCredits: Codable, Equatable {
+    let count: Int
+    let nextExpiresAt: Date?
+}
+
 struct UsageRecord: Codable, Identifiable, Equatable {
     let service: ServiceID
     let source: UsageSource
@@ -57,6 +63,7 @@ struct UsageRecord: Codable, Identifiable, Equatable {
     var balanceAllocation: BalanceAllocation? = nil
     /// First observation showing the latest Colab grant (a balance rise), if one was seen.
     var lastGrantAt: Date? = nil
+    var resetCredits: ResetCredits? = nil
     var id: String { service.id }
     var balanceUnit: String { "CU" }
 
@@ -105,7 +112,8 @@ struct UsageSnapshot: Codable, Equatable {
                         weekly: .init(usedPercent: 62, resetsAt: now.addingTimeInterval(259200)), balance: nil),
             UsageRecord(service: .codex, source: .demo, observedAt: now,
                         fiveHour: .init(usedPercent: 75, resetsAt: now.addingTimeInterval(3600)),
-                        weekly: .init(usedPercent: 19, resetsAt: now.addingTimeInterval(432000)), balance: nil),
+                        weekly: .init(usedPercent: 19, resetsAt: now.addingTimeInterval(432000)), balance: nil,
+                        resetCredits: .init(count: 2, nextExpiresAt: now.addingTimeInterval(5 * 86400))),
             UsageRecord(service: .antigravity, source: .demo, observedAt: now,
                         fiveHour: .init(usedPercent: 10, resetsAt: now.addingTimeInterval(14400)),
                         weekly: .init(usedPercent: 36, resetsAt: now.addingTimeInterval(345600)), balance: nil),
@@ -139,6 +147,12 @@ struct UsageSnapshot: Codable, Equatable {
                 guard r.service == .colab, r.source == (isDemo ? .demo : .colabCli),
                       grant.timeIntervalSince1970.isFinite, grant.timeIntervalSince1970 > 0,
                       grant <= now.addingTimeInterval(60) else { throw UsageError.invalidData }
+            }
+            if let credits = r.resetCredits {
+                guard r.service == .codex, r.source == (isDemo ? .demo : .codexAppServer), r.observedAt != nil,
+                      (0...99).contains(credits.count), credits.count > 0 || credits.nextExpiresAt == nil,
+                      credits.nextExpiresAt.map({ $0.timeIntervalSince1970.isFinite && $0.timeIntervalSince1970 > 0
+                          && $0 <= now.addingTimeInterval(400 * 86400) }) ?? true else { throw UsageError.invalidData }
             }
             if r.fiveHour != nil || r.weekly != nil || r.balance != nil {
                 guard r.observedAt != nil else { throw UsageError.invalidData }

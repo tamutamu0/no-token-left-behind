@@ -22,6 +22,7 @@ The app writes a single file, `ai-usage-snapshot-v2.json`, to the iCloud Drive f
 - fixed service IDs and source kinds
 - used percent, reset times and balance
 - observation times, the time a Colab grant was observed, and a confirmed total
+- the number of banked Codex resets and the earliest expiry (no credit IDs or text)
 - the schema version and whether the data is a demo
 
 There are no account names, email addresses, conversations, raw CLI output or error messages. Any extra fields in the collected JSON are dropped when it is re-encoded into the validated model.

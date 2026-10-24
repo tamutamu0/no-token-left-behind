@@ -52,6 +52,16 @@ def clean_record(raw, now):
             or result["balance"] is None or result["balance"] > allocation["total"]:
             return None
         result["balanceAllocation"] = {"total": allocation["total"], "basis": "confirmedInitialGrant"}
+    credits = raw.get("resetCredits")
+    if credits is not None:
+        count = credits.get("count") if isinstance(credits, dict) else None
+        expires = credits.get("nextExpiresAt") if isinstance(credits, dict) else None
+        if raw["service"] != "codex" or raw["source"] != "codexAppServer" \
+            or isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 99 \
+            or (expires is not None and number(expires, now + 400 * 86400) in (None, 0)) \
+            or (count == 0 and expires is not None) or observed is None:
+            return None
+        result["resetCredits"] = {"count": count, "nextExpiresAt": expires}
     grant = raw.get("lastGrantAt")
     if grant is not None:
         if raw["service"] != "colab" or raw["source"] != "colabCli" or number(grant, now + 60) in (None, 0):

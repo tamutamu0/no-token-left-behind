@@ -13,7 +13,7 @@ const clean = () => JSON.parse(JSON.stringify(api.demoSnapshot(now)));
 
 test('records for unknown or retired services are skipped instead of rejecting the file; zero is a real balance', () => {
   const input = clean(); input.isDemo = false;
-  for (const r of input.records) { r.source = 'manual'; delete r.balanceAllocation; }
+  for (const r of input.records) { r.source = 'manual'; delete r.balanceAllocation; delete r.resetCredits; }
   input.records[3].balance = 0;
   input.records.push({ service: 'googleCredits', source: 'antigravityCli', observedAt: now, balance: 320 },
     { service: 'futureService', source: 'somethingNew', observedAt: now });
@@ -46,7 +46,7 @@ test('confirmed Colab allocation gives consumption and percentage while legacy b
   assert.equal(Math.round(stats.remainingPercent), 80);
   input.isDemo = false; input.records = [r]; r.source = 'colabCli'; r.balanceAllocation.basis = 'confirmedInitialGrant';
   assert.equal(api.allocationStats(api.normalizeSnapshot(input, now).records[0]).consumed, 39.5);
-  delete r.balanceAllocation;
+  delete r.balanceAllocation; delete r.resetCredits;
   assert.equal(api.allocationStats(api.normalizeSnapshot(input, now).records[0]), null);
 });
 test('allocation must be confirmed for this service and source; untrusted fields are stripped', () => {
@@ -91,7 +91,7 @@ test('settings are downloaded from iCloud before reading; only known values are 
 test('a failed iCloud download still reads the local copy; a real failure carries its reason', async () => {
   const current = Math.floor(Date.now() / 1000);
   const live = clean(); live.isDemo = false; live.generatedAt = current - 5;
-  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; r.observedAt = current - 60; }
+  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; delete r.resetCredits; r.observedAt = current - 60; }
   const cloud = new Map([['/cloud/ai-usage-snapshot-v2.json', JSON.stringify(live)]]);
   const fm = fileManager(cloud); fm.downloadFileFromiCloud = async () => { throw new Error('offline'); };
   context.FileManager = { local: () => fileManager(new Map()), iCloud: () => fm };
@@ -105,7 +105,7 @@ test('a failed iCloud download still reads the local copy; a real failure carrie
 test('iCloud failure retains old observation and cloud demo cannot replace live cache', async () => {
   const current = Math.floor(Date.now()/1000);
   const live = clean(); live.isDemo = false; live.generatedAt = current - 5;
-  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; r.observedAt = current - 7200; }
+  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; delete r.resetCredits; r.observedAt = current - 7200; }
   const local = new Map([['/local/ai-usage-cache-v1.json', JSON.stringify(live)]]);
   const cloud = new Map();
   context.FileManager = { local: () => fileManager(local), iCloud: () => fileManager(cloud) };
@@ -148,6 +148,7 @@ function fakeScriptable() {
   context.Size = class { constructor(width, height) { this.width = width; this.height = height; } };
   context.Font = { semiboldSystemFont: () => ({}), semiboldRoundedSystemFont: () => ({}), systemFont: () => ({}) };
   context.Script = { name: () => 'AI Usage' };
+  context.SFSymbol = { named: name => ({ image: { symbol: name }, applyFont() {} }) };
   return { labels, elements };
 }
 test('home (table style): quota rows, Colab as a balance under a divider, absent windows paint nothing', () => {
@@ -275,6 +276,33 @@ test('home (ring style, the default): rings hold both percentages, only reset ti
     for (const key of ['textColor', 'backgroundColor'])
       if (element[key]) assert.equal(element[key].dynamic, true);
 });
+test('banked Codex resets: a ticket badge after the name, orange within a week, gone once expired', () => {
+  const { labels, elements } = fakeScriptable();
+  const render = (snapshot, size, style = 'rings') => {
+    const start = elements.length; labels.length = 0;
+    api.buildWidget(api.normalizeSnapshot(snapshot, now), '', size, now, '', null, style);
+    return { labels: [...labels], elements: elements.slice(start) };
+  };
+  const m = render(clean(), 'medium');
+  assert.ok(m.labels.includes('2'));
+  const icon = m.elements.find(e => e.image && e.image.symbol === 'ticket.fill');
+  assert.ok(icon && icon.tintColor.light.hex === 'a65b00', 'expires in 5 days, so orange');
+  const until = new Date((now + 5 * 86400) * 1000);
+  assert.ok(render(clean(), 'large').labels.includes(`2 · ${until.getMonth() + 1}/${until.getDate()}まで`));
+  assert.ok(render(clean(), 'medium', 'table').labels.includes('2'));
+  const later = clean(); later.records[1].resetCredits.nextExpiresAt = now + 20 * 86400;
+  assert.equal(render(later, 'medium').elements.find(e => e.image && e.image.symbol).tintColor.light.hex, '74747c');
+  const gone = clean(); gone.records[1].resetCredits = { count: 1, nextExpiresAt: now - 10 };
+  assert.ok(!render(gone, 'medium').elements.some(e => e.image && e.image.symbol));
+  for (const edit of [s => { s.records[0].resetCredits = { count: 1, nextExpiresAt: null }; },
+    s => { s.records[1].resetCredits.count = -1; }, s => { s.records[1].resetCredits.count = 1.5; },
+    s => { s.records[1].resetCredits = { count: 0, nextExpiresAt: now + 10 }; },
+    s => { s.records[1].resetCredits.nextExpiresAt = now + 500 * 86400; }]) {
+    const c = clean(); edit(c); assert.throws(() => api.normalizeSnapshot(c, now));
+  }
+  const stripped = clean(); stripped.records[1].resetCredits.id = 'fixture-secret';
+  assert.ok(!JSON.stringify(api.normalizeSnapshot(stripped, now)).includes('fixture'));
+});
 test('lock screen: monochrome inline, rectangular and circular widgets', () => {
   const { labels, elements } = fakeScriptable();
   const render = (snapshot, family, parameter = '') => {
@@ -340,7 +368,7 @@ test('next Colab grant counts down to the configured renewal day, clamped to sho
 
 test('lastGrantAt is accepted only on an official Colab record', () => {
   const live = clean(); live.isDemo = false;
-  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; }
+  for (const r of live.records) { r.source = 'manual'; delete r.balanceAllocation; delete r.resetCredits; }
   live.records[3].source = 'colabCli'; live.records[3].lastGrantAt = now - 86400;
   assert.equal(api.normalizeSnapshot(live, now).records[3].lastGrantAt, now - 86400);
   for (const edit of [s => s.records[3].lastGrantAt = now + 3600, s => s.records[3].lastGrantAt = 'x',
@@ -374,7 +402,7 @@ test('languages: device language picks en/ja/zh/ko, anything else falls back to 
 test('new sync file takes priority and a damaged update retains the verified cache', async () => {
   const current = Math.floor(Date.now()/1000);
   const old = clean(); old.isDemo = false; old.generatedAt = current - 120;
-  for (const r of old.records) { r.source = 'manual'; delete r.balanceAllocation; r.observedAt = current - 120; }
+  for (const r of old.records) { r.source = 'manual'; delete r.balanceAllocation; delete r.resetCredits; r.observedAt = current - 120; }
   const next = JSON.parse(JSON.stringify(old)); next.generatedAt = current - 10;
   next.records[0].fiveHour.usedPercent = 43; next.records[0].observedAt = current - 10;
   const local = new Map();
